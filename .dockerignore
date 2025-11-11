@@ -1,0 +1,12 @@
+.git
+.git/**
+.DS_Store
+**/.DS_Store
+tmp/
+build/
+dist/
+bin/
+vendor/
+node_modules/
+*.log
+.env
