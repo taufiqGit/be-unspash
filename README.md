@@ -93,7 +93,7 @@ docker build -t gowes-api .
 Jalankan container:
 
 ```bash
-docker run --rm -p 8080:8080 gowes-api
+docker run -d --name nama_container -p 8080:8080 gowes-api
 ```
 
 Server akan tersedia di `http://localhost:8080`.
