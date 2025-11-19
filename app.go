@@ -19,16 +19,33 @@ func loggingMiddleware(next http.Handler) http.Handler {
 // corsMiddleware menambahkan header CORS dan menangani preflight OPTIONS
 func corsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        // Origin wildcard; jika membutuhkan cookie/credentials, ubah ke origin spesifik dan tambah Allow-Credentials
-        w.Header().Set("Access-Control-Allow-Origin", "*")
+        // Tetapkan origin dinamis. Jika tidak ada, gunakan wildcard.
+        origin := r.Header.Get("Origin")
+        if origin == "" {
+            origin = "*"
+        }
+        w.Header().Set("Access-Control-Allow-Origin", origin)
         w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        // Echo header yang diminta pada preflight agar tidak gagal karena header kustom.
+        reqHeaders := r.Header.Get("Access-Control-Request-Headers")
+        if reqHeaders != "" {
+            w.Header().Set("Access-Control-Allow-Headers", reqHeaders)
+        } else {
+            w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        }
+        // Kurangi frekuensi preflight di browser yang mendukung
+        w.Header().Set("Access-Control-Max-Age", "86400")
         w.Header().Add("Vary", "Origin")
         w.Header().Add("Vary", "Access-Control-Request-Method")
         w.Header().Add("Vary", "Access-Control-Request-Headers")
 
         if r.Method == http.MethodOptions {
             // Preflight: cukup kembalikan 204/200 dengan header CORS
+            log.Printf("CORS preflight origin=%s method=%s headers=%s",
+                origin,
+                r.Header.Get("Access-Control-Request-Method"),
+                reqHeaders,
+            )
             w.WriteHeader(http.StatusNoContent)
             return
         }
