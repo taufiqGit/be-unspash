@@ -26,7 +26,7 @@ func TodosHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		var in models.TodoInput
 		if err := json.Unmarshal(body, &in); err != nil {
-			writeError(w, http.StatusBadRequest, "BAD_REQUEST", "format JSON tidak valid")
+			writeError(w, http.StatusBadRequest, "BAD_REQUEST", "format JSON tidak valid!!")
 			return
 		}
 		if strings.TrimSpace(in.Title) == "" || strings.TrimSpace(in.ImageURL) == "" {
