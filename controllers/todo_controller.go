@@ -21,7 +21,7 @@ func TodosHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			writeError(w, http.StatusBadRequest, "BAD_REQUEST", "gagal membaca body")
+			writeError(w, http.StatusBadRequest, "BAD_REQUEST", "gagal membaca bodies")
 			return
 		}
 		var in models.TodoInput
