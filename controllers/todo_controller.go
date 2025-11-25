@@ -17,7 +17,7 @@ func TodosHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		todos := services.ListTodos()
 		meta := map[string]any{"count": len(todos)}
-		writeSuccess(w, http.StatusOK, todos, "list data todos", meta)
+		writeSuccess(w, http.StatusOK, todos, "list data todoss", meta)
 	case http.MethodPost:
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
