@@ -30,7 +30,7 @@ func TodosHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if strings.TrimSpace(in.Title) == "" || strings.TrimSpace(in.ImageURL) == "" {
-			writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "title dan image url tidak boleh kosong")
+			writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "title dan image url tidak boleh kosongg")
 			return
 		}
 		created := services.CreateTodo(in)
