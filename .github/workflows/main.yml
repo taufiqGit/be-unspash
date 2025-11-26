@@ -45,4 +45,4 @@ jobs:
             sudo docker pull ${{ secrets.DOCKERHUB_USER }}/go-app:latest
             sudo docker container stop gowes-api || true
             sudo docker container rm gowes-api || true
-            
+            sudo docker container ps
