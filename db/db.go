@@ -14,7 +14,7 @@ var DB *sql.DB
 func Init() (*sql.DB, error) {
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		return nil, errors.New("missing POSTGRES_DSN")
+		return nil, errors.New("missing POSTGRES_DSN url")
 	}
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
