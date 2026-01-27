@@ -35,6 +35,16 @@ Server akan berjalan di `http://localhost:8080`.
   - Body JSON: `{ "title": "Belajar Go Lanjut", "done": true, "image_url": "https://example.com/new.png" }`
 - `DELETE /api/todos/{id}` — hapus todo by ID
 
+### Categories
+
+- `GET /api/categories` — ambil semua kategori
+- `POST /api/categories` — buat kategori baru
+  - Body JSON: `{ "name": "Teknologi", "description": "Kategori seputar teknologi" }`
+- `GET /api/categories/{id}` — ambil detail kategori
+- `PUT /api/categories/{id}` — update kategori
+  - Body JSON: `{ "name": "Teknologi Baru", "description": "Update deskripsi" }`
+- `DELETE /api/categories/{id}` — hapus kategori
+
 ## Format Respons
 
 Semua respons menggunakan envelope konsisten:
