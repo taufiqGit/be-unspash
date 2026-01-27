@@ -4,7 +4,7 @@ FROM golang:1.21-alpine AS builder
 WORKDIR /src
 
 # Cache dependencies first
-COPY go.mod .
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy source
@@ -20,6 +20,10 @@ USER appuser
 
 WORKDIR /app
 COPY --from=builder /out/app /app/app
+
+# Set default environment variable for Postgres connection
+ENV POSTGRES_DSN="postgres://user:password@localhost:5432/dbname?sslmode=disable"
+
 EXPOSE 8080
 
 ENTRYPOINT ["/app/app"]

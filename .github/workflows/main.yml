@@ -46,4 +46,4 @@ jobs:
             sudo docker container stop gowezt || true
             sudo docker container rm gowezt || true
             sudo docker container ps
-            sudo docker run -d --name gowezt -p 9015:8080 ${{ secrets.DOCKERHUB_USER }}/go-app:latest
+            sudo docker run -d --name gowezt -p 9015:8080 -e POSTGRES_DSN="${{ secrets.POSTGRES_DSN }}" ${{ secrets.DOCKERHUB_USER }}/go-app:latest
