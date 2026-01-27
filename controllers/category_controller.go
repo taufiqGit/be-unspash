@@ -17,7 +17,7 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		categories := services.ListCategories()
 		meta := map[string]any{"count": len(categories)}
-		writeSuccess(w, http.StatusOK, categories, "list categories", meta)
+		writeSuccess(w, http.StatusOK, categories, "list categories iki", meta)
 	case http.MethodPost:
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
