@@ -11,11 +11,25 @@ import (
 	"gowes/services"
 )
 
-// CategoriesHandler handles /api/categories (GET list, POST create)
-func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
+// CategoryController handles HTTP requests for categories
+type CategoryController struct {
+	service services.CategoryService
+}
+
+// NewCategoryController creates a new CategoryController
+func NewCategoryController(service services.CategoryService) *CategoryController {
+	return &CategoryController{service: service}
+}
+
+// ListOrCreate handles /api/categories (GET list, POST create)
+func (c *CategoryController) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		categories := services.ListCategories()
+		categories, err := c.service.ListCategories()
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to list categories")
+			return
+		}
 		meta := map[string]any{"count": len(categories)}
 		writeSuccess(w, http.StatusOK, categories, "list categories iki", meta)
 	case http.MethodPost:
@@ -33,7 +47,11 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "name cannot be empty")
 			return
 		}
-		created := services.CreateCategory(in)
+		created, err := c.service.CreateCategory(in)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create category")
+			return
+		}
 		writeSuccess(w, http.StatusCreated, created, "category created", nil)
 	default:
 		w.Header().Set("Allow", "GET, POST")
@@ -41,8 +59,8 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// CategoryByIDHandler handles /api/categories/{id} (GET detail, PUT update, DELETE delete)
-func CategoryByIDHandler(w http.ResponseWriter, r *http.Request) {
+// HandleByID handles /api/categories/{id} (GET detail, PUT update, DELETE delete)
+func (c *CategoryController) HandleByID(w http.ResponseWriter, r *http.Request) {
 	// Extract ID from path
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
@@ -53,8 +71,8 @@ func CategoryByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		category, ok := services.GetCategory(id)
-		if !ok {
+		category, err := c.service.GetCategory(id)
+		if err != nil {
 			writeError(w, http.StatusNotFound, "NOT_FOUND", "category not found")
 			return
 		}
@@ -69,14 +87,14 @@ func CategoryByIDHandler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "name cannot be empty")
 			return
 		}
-		updated, ok := services.UpdateCategory(id, in)
-		if !ok {
+		updated, err := c.service.UpdateCategory(id, in)
+		if err != nil {
 			writeError(w, http.StatusNotFound, "NOT_FOUND", "category not found")
 			return
 		}
 		writeSuccess(w, http.StatusOK, updated, "category updated", nil)
 	case http.MethodDelete:
-		if ok := services.DeleteCategory(id); !ok {
+		if err := c.service.DeleteCategory(id); err != nil {
 			writeError(w, http.StatusNotFound, "NOT_FOUND", "category not found")
 			return
 		}

@@ -5,10 +5,21 @@ import (
 	"net/http"
 )
 
-func DatabaseTablesHandler(w http.ResponseWriter, r *http.Request) {
+// SystemController handles HTTP requests for database metadata
+type SystemController struct {
+	service services.SystemService
+}
+
+// NewSystemController creates a new SystemController
+func NewSystemController(service services.SystemService) *SystemController {
+	return &SystemController{service: service}
+}
+
+// DatabaseTablesHandler handles /api/database/tables
+func (c *SystemController) DatabaseTablesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		tables, err := services.ListTables()
+		tables, err := c.service.ListTables()
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "DATABASE_ERROR", "gagal mengambil daftar tabel")
 			return
@@ -21,7 +32,8 @@ func DatabaseTablesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func TableColumnsHandler(w http.ResponseWriter, r *http.Request) {
+// TableColumnsHandler handles /api/database/columns
+func (c *SystemController) TableColumnsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", "GET")
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method tidak diizinkan")
@@ -36,7 +48,7 @@ func TableColumnsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	columns, err := services.GetTableColumns(schema, table)
+	columns, err := c.service.GetTableColumns(schema, table)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "DATABASE_ERROR", "gagal mengambil struktur kolom")
 		return

@@ -11,11 +11,25 @@ import (
 	"gowes/services"
 )
 
-// TodosHandler menangani /api/todos (GET untuk list, POST untuk create)
-func TodosHandler(w http.ResponseWriter, r *http.Request) {
+// TodoController handles HTTP requests for todos
+type TodoController struct {
+	service services.TodoService
+}
+
+// NewTodoController creates a new TodoController
+func NewTodoController(service services.TodoService) *TodoController {
+	return &TodoController{service: service}
+}
+
+// ListOrCreate handles /api/todos (GET for list, POST for create)
+func (c *TodoController) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		todos := services.ListTodos()
+		todos, err := c.service.ListTodos()
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "gagal mengambil data todos")
+			return
+		}
 		meta := map[string]any{"count": len(todos)}
 		writeSuccess(w, http.StatusOK, todos, "list data todos aseli", meta)
 	case http.MethodPost:
@@ -33,7 +47,11 @@ func TodosHandler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "titleies dan image url tidak boleh kosonggnn")
 			return
 		}
-		created := services.CreateTodo(in)
+		created, err := c.service.CreateTodo(in)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "gagal membuat todo")
+			return
+		}
 		writeSuccess(w, http.StatusCreated, created, "todo created", nil)
 	default:
 		w.Header().Set("Allow", "GET, POST")
@@ -41,8 +59,8 @@ func TodosHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TodoByIDHandler menangani /api/todos/{id} (GET, PUT, DELETE)
-func TodoByIDHandler(w http.ResponseWriter, r *http.Request) {
+// HandleByID handles /api/todos/{id} (GET, PUT, DELETE)
+func (c *TodoController) HandleByID(w http.ResponseWriter, r *http.Request) {
 	// Ekstrak ID dari path
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/todos/")
 	id, err := strconv.Atoi(idStr)
@@ -53,8 +71,8 @@ func TodoByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		todo, ok := services.GetTodo(id)
-		if !ok {
+		todo, err := c.service.GetTodo(id)
+		if err != nil {
 			writeError(w, http.StatusNotFound, "NOT_FOUND", "todo tidak ditemukan")
 			return
 		}
@@ -69,14 +87,14 @@ func TodoByIDHandler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "title tidak boleh kosong")
 			return
 		}
-		updated, ok := services.UpdateTodo(id, in)
-		if !ok {
+		updated, err := c.service.UpdateTodo(id, in)
+		if err != nil {
 			writeError(w, http.StatusNotFound, "NOT_FOUND", "todo tidak ditemukan")
 			return
 		}
 		writeSuccess(w, http.StatusOK, updated, "todo updated", nil)
 	case http.MethodDelete:
-		if ok := services.DeleteTodo(id); !ok {
+		if err := c.service.DeleteTodo(id); err != nil {
 			writeError(w, http.StatusNotFound, "NOT_FOUND", "todo tidak ditemukan")
 			return
 		}

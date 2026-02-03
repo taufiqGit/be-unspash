@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"time"
 
+	"gowes/controllers"
 	"gowes/db"
+	"gowes/repositories"
 	"gowes/routes"
+	"gowes/services"
 
 	"github.com/joho/godotenv"
 )
@@ -60,14 +63,36 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("warning: could not load .env file: %v", err)
 	}
-	if _, err := db.Init(); err != nil {
+	dbConn, err := db.Init()
+	if err != nil {
 		log.Fatalf("db error: %v", err)
 	}
-	db.CreateTables()
+	//db.CreateTables()
 	defer db.Close()
+
+	// Setup Repositories
+	todoRepo := repositories.NewTodoRepository(dbConn)
+	categoryRepo := repositories.NewCategoryRepository(dbConn)
+	systemRepo := repositories.NewSystemRepository(dbConn)
+	userRepo := repositories.NewUserRepository(dbConn)
+
+	// Setup Services
+	todoService := services.NewTodoService(todoRepo)
+	categoryService := services.NewCategoryService(categoryRepo)
+	systemService := services.NewSystemService(systemRepo)
+	authService := services.NewAuthService(userRepo)
+
+	// Setup Controllers
+	todoController := controllers.NewTodoController(todoService)
+	categoryController := controllers.NewCategoryController(categoryService)
+	systemController := controllers.NewSystemController(systemService)
+	authController := controllers.NewAuthController(authService)
+
 	mux := http.NewServeMux()
-	routes.RegisterTodoRoutes(mux)
-	routes.RegisterCategoryRoutes(mux)
+	routes.RegisterTodoRoutes(mux, todoController)
+	routes.RegisterCategoryRoutes(mux, categoryController)
+	routes.RegisterSystemRoutes(mux, systemController)
+	routes.RegisterAuthRoutes(mux, authController)
 
 	server := &http.Server{
 		Addr:         ":8080",

@@ -14,6 +14,11 @@ Proyek ini membuat REST API sederhana dengan arsitektur MVC untuk resource `Todo
 └── go.mod
 ```
 
+## Database Migrations
+
+Proyek ini menggunakan `golang-migrate` untuk version control skema database.
+Lihat panduan lengkap di [MIGRATION.md](./MIGRATION.md) untuk cara instalasi dan penggunaan.
+
 ## Menjalankan
 
 1. Pastikan Go terinstall (disarankan Go 1.21+).
