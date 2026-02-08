@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"gowes/models"
 	"net/http"
 	"os"
@@ -56,10 +57,15 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// Note: ID is stored as "sub"
 		userID, _ := claims["sub"].(string)
 		role, _ := claims["role"].(string)
+		companyID, _ := claims["company_id"].(string)
+		fmt.Println("companyID:", companyID)
+		fmt.Println("userID:", userID)
+		fmt.Println("role:", role)
 
 		user := models.User{
-			ID:   userID,
-			Role: models.UserRole(role),
+			ID:        userID,
+			Role:      models.UserRole(role),
+			CompanyID: &companyID,
 		}
 
 		ctx := context.WithValue(r.Context(), UserContextKey, user)

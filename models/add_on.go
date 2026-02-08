@@ -4,13 +4,12 @@ import (
 	"time"
 )
 
-type Company struct {
+type AddOn struct {
 	ID        string    `json:"id"`
-	Logo      string    `json:"logo"`
+	CompanyID string    `json:"company_id"`
 	Name      string    `json:"name"`
-	Phone     string    `json:"phone"`
-	Owner     string    `json:"owner"`
-	Address   string    `json:"address"`
+	Price     float64   `json:"price"`
+	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

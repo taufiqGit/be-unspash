@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"gowes/models"
 	"gowes/services"
 	"net/http"
@@ -22,11 +23,13 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var input models.UserInput
+	var input models.UserRegisterInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid JSON format")
 		return
 	}
+	// Debug input value if needed, but r.Body is already drained here
+	fmt.Printf("Received input: %+v\n", input)
 
 	user, err := c.authService.Register(input)
 	if err != nil {

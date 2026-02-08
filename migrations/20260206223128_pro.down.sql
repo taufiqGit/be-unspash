@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS order_types;
+DROP TABLE IF EXISTS outlet_products;
+DROP TABLE IF EXISTS outlets;
+DROP TABLE IF EXISTS add_on_products;
+DROP TABLE IF EXISTS add_ons;
+DROP TABLE IF EXISTS products;

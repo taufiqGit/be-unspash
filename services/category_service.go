@@ -7,11 +7,11 @@ import (
 )
 
 type CategoryService interface {
-	ListCategories() ([]models.Category, error)
-	GetCategory(id int) (models.Category, error)
-	CreateCategory(in models.CategoryInput) (models.Category, error)
-	UpdateCategory(id int, in models.CategoryInput) (models.Category, error)
-	DeleteCategory(id int) error
+	ListCategories(companyID string, params models.PaginationParams) ([]models.Category, error)
+	GetCategory(id string) (models.Category, error)
+	CreateCategory(in models.CategoryInput, companyID string) (models.Category, error)
+	UpdateCategory(id string, in models.CategoryInput) (models.Category, error)
+	DeleteCategory(id string) error
 }
 
 type categoryService struct {
@@ -22,16 +22,18 @@ func NewCategoryService(repo repositories.CategoryRepository) CategoryService {
 	return &categoryService{repo: repo}
 }
 
-func (s *categoryService) ListCategories() ([]models.Category, error) {
-	return s.repo.FindAll()
+func (s *categoryService) ListCategories(companyID string, params models.PaginationParams) ([]models.Category, error) {
+	categories, _, err := s.repo.FindAll(companyID, params)
+	return categories, err
 }
 
-func (s *categoryService) GetCategory(id int) (models.Category, error) {
+func (s *categoryService) GetCategory(id string) (models.Category, error) {
 	return s.repo.FindByID(id)
 }
 
-func (s *categoryService) CreateCategory(in models.CategoryInput) (models.Category, error) {
+func (s *categoryService) CreateCategory(in models.CategoryInput, companyID string) (models.Category, error) {
 	c := models.Category{
+		CompanyID:   companyID,
 		Name:        in.Name,
 		Description: in.Description,
 		CreatedAt:   time.Now().UTC(),
@@ -40,7 +42,7 @@ func (s *categoryService) CreateCategory(in models.CategoryInput) (models.Catego
 	return s.repo.Create(c)
 }
 
-func (s *categoryService) UpdateCategory(id int, in models.CategoryInput) (models.Category, error) {
+func (s *categoryService) UpdateCategory(id string, in models.CategoryInput) (models.Category, error) {
 	// Check if exists
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
@@ -54,6 +56,6 @@ func (s *categoryService) UpdateCategory(id int, in models.CategoryInput) (model
 	return s.repo.Update(existing)
 }
 
-func (s *categoryService) DeleteCategory(id int) error {
+func (s *categoryService) DeleteCategory(id string) error {
 	return s.repo.Delete(id)
 }

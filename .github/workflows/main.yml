@@ -46,5 +46,5 @@ jobs:
             sudo docker container stop gowezt || true
             sudo docker container rm gowezt || true
             sudo docker container ps
-            sudo docker run -d --name gowezt -p 9015:8080 -e POSTGRES_DSN="${{ secrets.POSTGRES_DSN }}" ${{ secrets.DOCKERHUB_USER }}/goal-app:latest
+            sudo docker run -d --name gowezt -p 9015:8080 -e POSTGRES_DSN="${{ secrets.POSTGRES_DSN }}" -e JWT_SECRET="${{ secrets.JWT_SECRET }}" ${{ secrets.DOCKERHUB_USER }}/goal-app:latest
             sudo docker container ps

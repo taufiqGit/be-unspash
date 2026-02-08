@@ -1,13 +1,14 @@
 package repositories
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"gowes/models"
 )
 
 type UserRepository interface {
-	Create(user models.User) (models.User, error)
+	Create(ctx context.Context, tx *sql.Tx, user models.User) (models.User, error)
 	FindByEmail(email string) (models.User, error)
 	FindByUsername(username string) (models.User, error)
 }
@@ -20,24 +21,39 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) Create(user models.User) (models.User, error) {
+func (r *userRepository) Create(ctx context.Context, tx *sql.Tx, user models.User) (models.User, error) {
 	// Note: We use DEFAULT uuid_generate_v4() for ID in SQL, so we scan it back
 	query := `
 		INSERT INTO users (username, email, password_hash, role, pos_pin, company_id, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id
 	`
-	err := r.db.QueryRow(
-		query,
-		user.Username,
-		user.Email,
-		user.PasswordHash,
-		user.Role,
-		user.PosPIN,
-		user.CompanyID,
-		user.CreatedAt,
-		user.UpdatedAt,
-	).Scan(&user.ID)
+	var row *sql.Row
+	if tx != nil {
+		row = tx.QueryRowContext(ctx, query,
+			user.Username,
+			user.Email,
+			user.PasswordHash,
+			user.Role,
+			user.PosPIN,
+			user.CompanyID,
+			user.CreatedAt,
+			user.UpdatedAt,
+		)
+	} else {
+		row = r.db.QueryRowContext(ctx, query,
+			user.Username,
+			user.Email,
+			user.PasswordHash,
+			user.Role,
+			user.PosPIN,
+			user.CompanyID,
+			user.CreatedAt,
+			user.UpdatedAt,
+		)
+	}
+
+	err := row.Scan(&user.ID)
 
 	if err != nil {
 		return models.User{}, err

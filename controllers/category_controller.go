@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"gowes/models"
 	"gowes/services"
+	"gowes/utils"
 )
 
 // CategoryController handles HTTP requests for categories
@@ -25,13 +26,25 @@ func NewCategoryController(service services.CategoryService) *CategoryController
 func (c *CategoryController) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		categories, err := c.service.ListCategories()
+		// Contoh: Ambil user dari context (dari AuthMiddleware)
+		user, ok := r.Context().Value(UserContextKey).(models.User)
+		if !ok || user.CompanyID == nil {
+			writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "company info missing")
+			return
+		}
+
+		// Get pagination params
+		params := utils.ParsePaginationParams(r)
+		fmt.Println(params, "ikih")
+
+		categories, err := c.service.ListCategories(*user.CompanyID, params)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to list categories")
 			return
 		}
-		meta := map[string]any{"count": len(categories)}
-		writeSuccess(w, http.StatusOK, categories, "list categories iki", meta)
+
+		meta := utils.CalculateMeta(len(categories), params)
+		writeSuccess(w, http.StatusOK, categories, "list categories", meta)
 	case http.MethodPost:
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -47,7 +60,15 @@ func (c *CategoryController) ListOrCreate(w http.ResponseWriter, r *http.Request
 			writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "name cannot be empty")
 			return
 		}
-		created, err := c.service.CreateCategory(in)
+
+		// Get user from context to extract CompanyID
+		user, ok := r.Context().Value(UserContextKey).(models.User)
+		if !ok || user.CompanyID == nil {
+			writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "company info missing")
+			return
+		}
+
+		created, err := c.service.CreateCategory(in, *user.CompanyID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create category")
 			return
@@ -62,9 +83,8 @@ func (c *CategoryController) ListOrCreate(w http.ResponseWriter, r *http.Request
 // HandleByID handles /api/categories/{id} (GET detail, PUT update, DELETE delete)
 func (c *CategoryController) HandleByID(w http.ResponseWriter, r *http.Request) {
 	// Extract ID from path
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
+	id := strings.TrimPrefix(r.URL.Path, "/api/categories/")
+	if id == "" {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "invalid ID")
 		return
 	}
@@ -98,7 +118,7 @@ func (c *CategoryController) HandleByID(w http.ResponseWriter, r *http.Request) 
 			writeError(w, http.StatusNotFound, "NOT_FOUND", "category not found")
 			return
 		}
-		writeSuccess(w, http.StatusOK, map[string]int{"id": id}, "category deleted", nil)
+		writeSuccess(w, http.StatusOK, nil, "category deleted", nil)
 	default:
 		w.Header().Set("Allow", "GET, PUT, DELETE")
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")

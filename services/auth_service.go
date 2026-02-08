@@ -1,7 +1,10 @@
 package services
 
 import (
+	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"gowes/models"
 	"gowes/repositories"
 	"os"
@@ -13,19 +16,25 @@ import (
 )
 
 type AuthService interface {
-	Register(input models.UserInput) (models.User, error)
+	Register(input models.UserRegisterInput) (models.User, error)
 	Login(input models.LoginInput) (models.AuthResponse, error)
 }
 
 type authService struct {
-	userRepo repositories.UserRepository
+	userRepo    repositories.UserRepository
+	companyRepo repositories.CompanyRepository
+	db          *sql.DB
 }
 
-func NewAuthService(userRepo repositories.UserRepository) AuthService {
-	return &authService{userRepo: userRepo}
+func NewAuthService(userRepo repositories.UserRepository, companyRepo repositories.CompanyRepository, db *sql.DB) AuthService {
+	return &authService{
+		userRepo:    userRepo,
+		companyRepo: companyRepo,
+		db:          db,
+	}
 }
 
-func (s *authService) Register(input models.UserInput) (models.User, error) {
+func (s *authService) Register(input models.UserRegisterInput) (models.User, error) {
 	// 1. Validation
 	if strings.TrimSpace(input.Username) == "" {
 		return models.User{}, errors.New("username cannot be empty")
@@ -35,6 +44,9 @@ func (s *authService) Register(input models.UserInput) (models.User, error) {
 	}
 	if len(input.Password) < 6 {
 		return models.User{}, errors.New("password must be at least 6 characters")
+	}
+	if strings.TrimSpace(input.BussinessName) == "" {
+		return models.User{}, errors.New("business name cannot be empty")
 	}
 
 	// 2. Check Duplicates
@@ -60,18 +72,35 @@ func (s *authService) Register(input models.UserInput) (models.User, error) {
 		return models.User{}, err
 	}
 
-	// 4. Create User
-	// Default role is Waiter if not specified
-	role := input.Role
-	if role == "" {
-		role = models.RoleWaiter
+	// 4. Start Transaction
+	ctx := context.Background()
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return models.User{}, err
+	}
+	defer tx.Rollback()
+
+	// 5. Create Company
+	newCompany := models.Company{
+		Name:      input.BussinessName,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 	}
 
+	createdCompany, err := s.companyRepo.Create(ctx, tx, newCompany)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	// 6. Create User (Admin) linked to Company
+	// First user is always Admin
 	newUser := models.User{
 		Username:     input.Username,
 		Email:        input.Email,
+		Phone:        &input.Phone,
 		PasswordHash: string(hashedPassword),
-		Role:         role,
+		Role:         models.RoleAdmin,
+		CompanyID:    &createdCompany.ID,
 		CreatedAt:    time.Now().UTC(),
 		UpdatedAt:    time.Now().UTC(),
 	}
@@ -81,11 +110,13 @@ func (s *authService) Register(input models.UserInput) (models.User, error) {
 		newUser.PosPIN = &pin
 	}
 
-	// Note: CompanyID is left nil for now as per simple register flow.
-	// In a real app, we might create a company here or link to one.
-
-	createdUser, err := s.userRepo.Create(newUser)
+	createdUser, err := s.userRepo.Create(ctx, tx, newUser)
 	if err != nil {
+		return models.User{}, err
+	}
+
+	// 7. Commit Transaction
+	if err := tx.Commit(); err != nil {
 		return models.User{}, err
 	}
 
@@ -124,11 +155,12 @@ func generateJWT(user models.User) (string, error) {
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-change-me" // Fallback for dev
 	}
-
+	fmt.Println(*user.CompanyID)
 	claims := jwt.MapClaims{
-		"sub":  user.ID,
-		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(), // 24 hours
+		"sub":        user.ID,
+		"role":       user.Role,
+		"company_id": user.CompanyID,
+		"exp":        time.Now().Add(time.Hour * 24).Unix(), // 24 hours
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

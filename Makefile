@@ -16,7 +16,7 @@ help:
 
 migrate-create:
 	@if [ -z "$(name)" ]; then echo "Error: name is required. Usage: make migrate-create name=<name>"; exit 1; fi
-	migrate create -ext sql -dir $(MIGRATIONS_DIR) -seq $(name)
+	migrate create -ext sql -dir $(MIGRATIONS_DIR) $(name)
 
 migrate-up:
 	@echo "Running up migrations..."

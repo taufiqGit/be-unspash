@@ -75,12 +75,13 @@ func main() {
 	categoryRepo := repositories.NewCategoryRepository(dbConn)
 	systemRepo := repositories.NewSystemRepository(dbConn)
 	userRepo := repositories.NewUserRepository(dbConn)
+	companyRepo := repositories.NewCompanyRepository(dbConn)
 
 	// Setup Services
 	todoService := services.NewTodoService(todoRepo)
 	categoryService := services.NewCategoryService(categoryRepo)
 	systemService := services.NewSystemService(systemRepo)
-	authService := services.NewAuthService(userRepo)
+	authService := services.NewAuthService(userRepo, companyRepo, dbConn)
 
 	// Setup Controllers
 	todoController := controllers.NewTodoController(todoService)
