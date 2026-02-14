@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"encoding/json"
@@ -12,18 +12,18 @@ import (
 	"gowes/utils"
 )
 
-// CategoryController handles HTTP requests for categories
-type CategoryController struct {
+// CategoryHandler handles HTTP requests for categories
+type CategoryHandler struct {
 	service services.CategoryService
 }
 
-// NewCategoryController creates a new CategoryController
-func NewCategoryController(service services.CategoryService) *CategoryController {
-	return &CategoryController{service: service}
+// NewCategoryHandler creates a new CategoryHandler
+func NewCategoryHandler(service services.CategoryService) *CategoryHandler {
+	return &CategoryHandler{service: service}
 }
 
 // ListOrCreate handles /api/categories (GET list, POST create)
-func (c *CategoryController) ListOrCreate(w http.ResponseWriter, r *http.Request) {
+func (c *CategoryHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		// Contoh: Ambil user dari context (dari AuthMiddleware)
@@ -81,7 +81,7 @@ func (c *CategoryController) ListOrCreate(w http.ResponseWriter, r *http.Request
 }
 
 // HandleByID handles /api/categories/{id} (GET detail, PUT update, DELETE delete)
-func (c *CategoryController) HandleByID(w http.ResponseWriter, r *http.Request) {
+func (c *CategoryHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 	// Extract ID from path
 	id := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	if id == "" {

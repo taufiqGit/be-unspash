@@ -17,3 +17,13 @@ type Outlet struct {
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
+
+type OutletInput struct {
+	Code       string `json:"code"`
+	Name       string `json:"name"`
+	Supervisor string `json:"supervisor"`
+	Address    string `json:"address"`
+	Phone      string `json:"phone"`
+	Email      string `json:"email"`
+	IsActive   bool   `json:"is_active"`
+}

@@ -63,7 +63,7 @@ func (r *categoryRepository) FindAll(companyID string, params models.PaginationP
 	defer rows.Close()
 	fmt.Println(params, "asuw")
 
-	var categories []models.Category
+	var categories = []models.Category{}
 	for rows.Next() {
 		fmt.Println("Scanning category...")
 		var c models.Category

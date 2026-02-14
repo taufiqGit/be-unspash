@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"encoding/json"
@@ -8,15 +8,15 @@ import (
 	"net/http"
 )
 
-type AuthController struct {
+type AuthHandler struct {
 	authService services.AuthService
 }
 
-func NewAuthController(authService services.AuthService) *AuthController {
-	return &AuthController{authService: authService}
+func NewAuthHandler(authService services.AuthService) *AuthHandler {
+	return &AuthHandler{authService: authService}
 }
 
-func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
+func (c *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", "POST")
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
@@ -42,7 +42,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, http.StatusCreated, user, "registration successful", nil)
 }
 
-func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
+func (c *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", "POST")
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")

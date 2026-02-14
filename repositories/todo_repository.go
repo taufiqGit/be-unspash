@@ -33,7 +33,7 @@ func (r *todoRepository) FindAll() ([]models.Todo, error) {
 	}
 	defer rows.Close()
 
-	var todos []models.Todo
+	var todos = []models.Todo{}
 	for rows.Next() {
 		var t models.Todo
 		if err := rows.Scan(&t.ID, &t.Title, &t.Done, &t.ImageURL, &t.CreatedAt, &t.UpdatedAt); err != nil {

@@ -1,22 +1,22 @@
-package controllers
+package handlers
 
 import (
 	"gowes/services"
 	"net/http"
 )
 
-// SystemController handles HTTP requests for database metadata
-type SystemController struct {
+// SystemHandler handles HTTP requests for database metadata
+type SystemHandler struct {
 	service services.SystemService
 }
 
-// NewSystemController creates a new SystemController
-func NewSystemController(service services.SystemService) *SystemController {
-	return &SystemController{service: service}
+// NewSystemHandler creates a new SystemHandler
+func NewSystemHandler(service services.SystemService) *SystemHandler {
+	return &SystemHandler{service: service}
 }
 
 // DatabaseTablesHandler handles /api/database/tables
-func (c *SystemController) DatabaseTablesHandler(w http.ResponseWriter, r *http.Request) {
+func (c *SystemHandler) DatabaseTablesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		tables, err := c.service.ListTables()
@@ -33,7 +33,7 @@ func (c *SystemController) DatabaseTablesHandler(w http.ResponseWriter, r *http.
 }
 
 // TableColumnsHandler handles /api/database/columns
-func (c *SystemController) TableColumnsHandler(w http.ResponseWriter, r *http.Request) {
+func (c *SystemHandler) TableColumnsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", "GET")
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method tidak diizinkan")

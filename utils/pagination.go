@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"gowes/models"
 	"math"
 	"net/http"
@@ -10,8 +11,9 @@ import (
 
 func ParsePaginationParams(r *http.Request) models.PaginationParams {
 	q := r.URL.Query()
-
+	fmt.Println(q.Get("page"))
 	page, _ := strconv.Atoi(q.Get("page"))
+	fmt.Println(page)
 	if page < 1 {
 		page = 1
 	}

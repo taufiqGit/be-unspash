@@ -64,7 +64,7 @@ func (r *systemRepository) GetTableColumns(schema, table string) ([]models.Colum
 	}
 	defer rows.Close()
 
-	var columns []models.ColumnInfo
+	var columns = []models.ColumnInfo{}
 	for rows.Next() {
 		var c models.ColumnInfo
 		if err := rows.Scan(&c.ColumnName, &c.DataType, &c.IsNullable, &c.ColumnDefault); err != nil {

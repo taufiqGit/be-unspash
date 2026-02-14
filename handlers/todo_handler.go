@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"encoding/json"
@@ -11,18 +11,18 @@ import (
 	"gowes/services"
 )
 
-// TodoController handles HTTP requests for todos
-type TodoController struct {
+// TodoHandler handles HTTP requests for todos
+type TodoHandler struct {
 	service services.TodoService
 }
 
-// NewTodoController creates a new TodoController
-func NewTodoController(service services.TodoService) *TodoController {
-	return &TodoController{service: service}
+// NewTodoHandler creates a new TodoHandler
+func NewTodoHandler(service services.TodoService) *TodoHandler {
+	return &TodoHandler{service: service}
 }
 
 // ListOrCreate handles /api/todos (GET for list, POST for create)
-func (c *TodoController) ListOrCreate(w http.ResponseWriter, r *http.Request) {
+func (c *TodoHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		todos, err := c.service.ListTodos()
@@ -60,7 +60,7 @@ func (c *TodoController) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleByID handles /api/todos/{id} (GET, PUT, DELETE)
-func (c *TodoController) HandleByID(w http.ResponseWriter, r *http.Request) {
+func (c *TodoHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 	// Ekstrak ID dari path
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/todos/")
 	id, err := strconv.Atoi(idStr)

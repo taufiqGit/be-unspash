@@ -1,15 +1,14 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"time"
-
-	"gowes/controllers"
 	"gowes/db"
+	"gowes/handlers"
 	"gowes/repositories"
 	"gowes/routes"
 	"gowes/services"
+	"log"
+	"net/http"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -73,27 +72,39 @@ func main() {
 	// Setup Repositories
 	todoRepo := repositories.NewTodoRepository(dbConn)
 	categoryRepo := repositories.NewCategoryRepository(dbConn)
+	addOnRepo := repositories.NewAddOnRepository(dbConn)
 	systemRepo := repositories.NewSystemRepository(dbConn)
 	userRepo := repositories.NewUserRepository(dbConn)
 	companyRepo := repositories.NewCompanyRepository(dbConn)
+	orderTypeRepo := repositories.NewOrderTypeRepository(dbConn)
+	outletRepo := repositories.NewOutletRepository(dbConn)
 
 	// Setup Services
 	todoService := services.NewTodoService(todoRepo)
 	categoryService := services.NewCategoryService(categoryRepo)
+	addOnService := services.NewAddOnService(addOnRepo)
 	systemService := services.NewSystemService(systemRepo)
 	authService := services.NewAuthService(userRepo, companyRepo, dbConn)
+	orderTypeService := services.NewOrderTypeService(orderTypeRepo)
+	outletService := services.NewOutletService(outletRepo)
 
-	// Setup Controllers
-	todoController := controllers.NewTodoController(todoService)
-	categoryController := controllers.NewCategoryController(categoryService)
-	systemController := controllers.NewSystemController(systemService)
-	authController := controllers.NewAuthController(authService)
+	// Setup Handlers
+	todoHandler := handlers.NewTodoHandler(todoService)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+	addOnHandler := handlers.NewAddOnHandler(addOnService)
+	systemHandler := handlers.NewSystemHandler(systemService)
+	authHandler := handlers.NewAuthHandler(authService)
+	orderTypeHandler := handlers.NewOrderTypeHandler(orderTypeService)
+	outletHandler := handlers.NewOutletHandler(outletService)
 
 	mux := http.NewServeMux()
-	routes.RegisterTodoRoutes(mux, todoController)
-	routes.RegisterCategoryRoutes(mux, categoryController)
-	routes.RegisterSystemRoutes(mux, systemController)
-	routes.RegisterAuthRoutes(mux, authController)
+	routes.RegisterTodoRoutes(mux, todoHandler)
+	routes.RegisterCategoryRoutes(mux, categoryHandler)
+	routes.RegisterSystemRoutes(mux, systemHandler)
+	routes.RegisterAuthRoutes(mux, authHandler)
+	routes.RegisterAddOnRoutes(mux, addOnHandler)
+	routes.RegisterOrderTypesRoutes(mux, orderTypeHandler)
+	routes.RegisterOutletRoutes(mux, outletHandler)
 
 	server := &http.Server{
 		Addr:         ":8080",
