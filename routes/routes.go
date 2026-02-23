@@ -40,5 +40,5 @@ func RegisterOrderTypesRoutes(mux *http.ServeMux, h *handlers.OrderTypeHandler) 
 
 func RegisterOutletRoutes(mux *http.ServeMux, h *handlers.OutletHandler) {
 	mux.Handle("/api/outlets", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
-	//mux.Handle("/api/outlets/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+	mux.Handle("/api/outlets/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandlerById)))
 }

@@ -84,7 +84,7 @@ func main() {
 	categoryService := services.NewCategoryService(categoryRepo)
 	addOnService := services.NewAddOnService(addOnRepo)
 	systemService := services.NewSystemService(systemRepo)
-	authService := services.NewAuthService(userRepo, companyRepo, dbConn)
+	authService := services.NewAuthService(userRepo, companyRepo, outletRepo, dbConn)
 	orderTypeService := services.NewOrderTypeService(orderTypeRepo)
 	outletService := services.NewOutletService(outletRepo)
 

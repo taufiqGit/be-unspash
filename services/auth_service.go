@@ -22,14 +22,16 @@ type AuthService interface {
 
 type authService struct {
 	userRepo    repositories.UserRepository
+	outletRepo  repositories.OutletRepository
 	companyRepo repositories.CompanyRepository
 	db          *sql.DB
 }
 
-func NewAuthService(userRepo repositories.UserRepository, companyRepo repositories.CompanyRepository, db *sql.DB) AuthService {
+func NewAuthService(userRepo repositories.UserRepository, companyRepo repositories.CompanyRepository, outletRepo repositories.OutletRepository, db *sql.DB) AuthService {
 	return &authService{
 		userRepo:    userRepo,
 		companyRepo: companyRepo,
+		outletRepo:  outletRepo,
 		db:          db,
 	}
 }
@@ -110,9 +112,24 @@ func (s *authService) Register(input models.UserRegisterInput) (models.User, err
 		newUser.PosPIN = &pin
 	}
 
-	createdUser, err := s.userRepo.Create(ctx, tx, newUser)
-	if err != nil {
-		return models.User{}, err
+	newOutlet := models.OutletInput{
+		Code:       fmt.Sprintf("%s-001", input.BussinessName),
+		Name:       input.BussinessName,
+		Supervisor: "-",
+		Address:    "-",
+		Phone:      input.Phone,
+		Email:      input.Email,
+		IsActive:   true,
+	}
+
+	createdUser, errUser := s.userRepo.Create(ctx, tx, newUser)
+	if errUser != nil {
+		return models.User{}, errUser
+	}
+
+	_, errOutlet := s.outletRepo.Create(&newOutlet, createdCompany.ID, ctx, tx)
+	if errOutlet != nil {
+		return models.User{}, errOutlet
 	}
 
 	// 7. Commit Transaction
