@@ -1,0 +1,147 @@
+package handlers
+
+import (
+	"gowes/models"
+	"gowes/services"
+	"gowes/utils"
+	"net/http"
+	"strings"
+)
+
+type ProductHandler struct {
+	service services.ProductService
+}
+
+func NewProductHandler(service services.ProductService) *ProductHandler {
+	return &ProductHandler{service: service}
+}
+
+func (h *ProductHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(UserContextKey).(models.User)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "Unauthorized", "User not found in context")
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		// Get pagination params
+		params := utils.ParsePaginationParams(r)
+		products, total, err := h.service.FindAll(*user.CompanyID, params)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "Failed to get products")
+			return
+		}
+		meta := utils.CalculateMeta(total, params)
+		writeSuccess(w, http.StatusOK, products, "Product list", meta)
+	case http.MethodPost:
+		err := r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "bad_request", "invalid multipart form")
+			return
+		}
+		name := r.FormValue("name")
+		price := r.FormValue("price")
+		sku := r.FormValue("sku")
+		unit := r.FormValue("unit")
+		cost := r.FormValue("cost")
+		categoryID := r.FormValue("category_id")
+
+		file, header, err := r.FormFile("image")
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "bad_request", "invalid image file")
+			return
+		}
+		defer file.Close()
+
+		if name == "" || price == "" || sku == "" || unit == "" || cost == "" || categoryID == "" {
+			writeError(w, http.StatusBadRequest, "bad_request", "missing required fields")
+			return
+		}
+
+		payload := models.ProductInput{
+			Name:       name,
+			Price:      utils.ParseFloat64(price),
+			SKU:        sku,
+			Unit:       unit,
+			Cost:       utils.ParseFloat64(cost),
+			CategoryID: categoryID,
+			CompanyID:  *user.CompanyID,
+			ImageURL:   "",
+		}
+
+		product, err := h.service.Create(*user.CompanyID, payload, file, header)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "Failed to create product")
+			return
+		}
+		writeSuccess(w, http.StatusCreated, product, "Product created", nil)
+	default:
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Method not allowed")
+		return
+	}
+}
+
+func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
+		writeError(w, http.StatusBadRequest, "validation_error", "id cannot be empty")
+		return
+	}
+
+	user, ok := r.Context().Value(UserContextKey).(models.User)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "Unauthorized", "User not found in context")
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		productID := r.PathValue("product_id")
+		product, err := h.service.FindByID(productID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "Failed to get product")
+			return
+		}
+
+		writeSuccess(w, http.StatusOK, product, "Product detail", nil)
+	case http.MethodDelete:
+		err := h.service.DeleteById(id)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "Failed to delete product")
+			return
+		}
+		writeSuccess(w, http.StatusOK, nil, "Product deleted", nil)
+	case http.MethodPut:
+		err := r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "bad_request", "invalid multipart form")
+			return
+		}
+		name := r.FormValue("name")
+		price := r.FormValue("price")
+		sku := r.FormValue("sku")
+		unit := r.FormValue("unit")
+		cost := r.FormValue("cost")
+		categoryID := r.FormValue("category_id")
+		if name == "" || price == "" || sku == "" || unit == "" || cost == "" || categoryID == "" {
+			writeError(w, http.StatusBadRequest, "bad_request", "missing required fields")
+			return
+		}
+		payload := models.ProductInput{
+			Name:       name,
+			Price:      utils.ParseFloat64(price),
+			SKU:        sku,
+			Unit:       unit,
+			Cost:       utils.ParseFloat64(cost),
+			CategoryID: categoryID,
+			CompanyID:  *user.CompanyID,
+			ImageURL:   "",
+		}
+		_ = payload // Update not yet implemented
+		writeSuccess(w, http.StatusOK, nil, "Product updated", nil)
+	default:
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Method not allowed")
+		return
+	}
+}

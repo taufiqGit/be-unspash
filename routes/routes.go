@@ -42,3 +42,14 @@ func RegisterOutletRoutes(mux *http.ServeMux, h *handlers.OutletHandler) {
 	mux.Handle("/api/outlets", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
 	mux.Handle("/api/outlets/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandlerById)))
 }
+
+func RegisterProductRoutes(mux *http.ServeMux, h *handlers.ProductHandler) {
+	mux.Handle("/api/products", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	// Protected routes wrapped with AuthMiddleware
+	mux.Handle("/api/products/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}
+
+func RegisterCustomerRoutes(mux *http.ServeMux, h *handlers.CustomerHandler) {
+	mux.Handle("/api/customers", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/customers/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}

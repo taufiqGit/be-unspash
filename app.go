@@ -78,6 +78,9 @@ func main() {
 	companyRepo := repositories.NewCompanyRepository(dbConn)
 	orderTypeRepo := repositories.NewOrderTypeRepository(dbConn)
 	outletRepo := repositories.NewOutletRepository(dbConn)
+	productRepo := repositories.NewProductRepository(dbConn)
+	storageRepo := repositories.NewStorageRepository(dbConn)
+	customerRepo := repositories.NewCustomerRepository(dbConn)
 
 	// Setup Services
 	todoService := services.NewTodoService(todoRepo)
@@ -87,6 +90,8 @@ func main() {
 	authService := services.NewAuthService(userRepo, companyRepo, outletRepo, dbConn)
 	orderTypeService := services.NewOrderTypeService(orderTypeRepo)
 	outletService := services.NewOutletService(outletRepo)
+	productService := services.NewProductService(productRepo, storageRepo)
+	customerService := services.NewCustomerService(customerRepo)
 
 	// Setup Handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
@@ -96,6 +101,8 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService)
 	orderTypeHandler := handlers.NewOrderTypeHandler(orderTypeService)
 	outletHandler := handlers.NewOutletHandler(outletService)
+	productHandler := handlers.NewProductHandler(productService)
+	customerHandler := handlers.NewCustomerHandler(customerService)
 
 	mux := http.NewServeMux()
 	routes.RegisterTodoRoutes(mux, todoHandler)
@@ -105,6 +112,8 @@ func main() {
 	routes.RegisterAddOnRoutes(mux, addOnHandler)
 	routes.RegisterOrderTypesRoutes(mux, orderTypeHandler)
 	routes.RegisterOutletRoutes(mux, outletHandler)
+	routes.RegisterProductRoutes(mux, productHandler)
+	routes.RegisterCustomerRoutes(mux, customerHandler)
 
 	server := &http.Server{
 		Addr:         ":8080",
