@@ -2,8 +2,9 @@ package repositories
 
 import (
 	"context"
-	"os"
 	"fmt"
+	"os"
+
 	"github.com/resend/resend-go/v3"
 )
 
@@ -32,15 +33,15 @@ func NewEmailRepository() EmailRepository {
 
 func (r *emailRepository) SendVerificationEmail(ctx context.Context, to, name, verificationLink string, token string) error {
 	params := &resend.SendEmailRequest{
-		From:    r.from,
-		To:      []string{to},
+		From: r.from,
+		To:   []string{to},
 		Template: &resend.EmailTemplate{
-		    Id: "email-verification",
-		    Variables: map[string]interface{}{
-		      "NAME": name,
-		      "LINK": fmt.Sprintf("%s?token=%s", verificationLink, token),
-		 },
-	  },
+			Id: "email-verification",
+			Variables: map[string]interface{}{
+				"NAME": name,
+				"LINK": fmt.Sprintf("%s?token=%s", verificationLink, token),
+			},
+		},
 	}
 
 	_, err := r.client.Emails.Send(params)
@@ -53,6 +54,6 @@ func (r *emailRepository) SendResetPasswordEmail(ctx context.Context, to, name, 
 }
 
 func (r *emailRepository) SendOrderConfirmation(ctx context.Context, to, orderID string, items []string) error {
-	// Similar implementation
+	// Similar implementationn
 	return nil
 }
