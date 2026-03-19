@@ -44,8 +44,8 @@ type UserRegisterInput struct {
 }
 
 type LoginInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Identifier string `json:"identifier"`
+	Password   string `json:"password"`
 }
 
 type AuthResponse struct {

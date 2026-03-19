@@ -67,7 +67,7 @@ func (r *userRepository) FindByEmail(email string) (models.User, error) {
 	query := `
 		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, active
 		FROM users
-		WHERE email = $1
+		WHERE email = $1 OR username = $1
 	`
 	var user models.User
 	err := r.db.QueryRow(query, email).Scan(

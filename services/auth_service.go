@@ -156,7 +156,7 @@ func (s *authService) Register(input models.UserRegisterInput) (models.User, err
 
 func (s *authService) Login(input models.LoginInput) (models.AuthResponse, error) {
 	// 1. Find User
-	user, err := s.userRepo.FindByEmail(input.Email)
+	user, err := s.userRepo.FindByEmail(input.Identifier)
 	if err != nil {
 		return models.AuthResponse{}, err
 	}
@@ -212,18 +212,18 @@ func (s *authService) VerifyEmail(token string) error {
 	return nil
 }
 
-func generateJWT(user models.User, for_verified	bool) (string, error) {
+func generateJWT(user models.User, for_verified bool) (string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-change-me" // Fallback for dev
 	}
 	fmt.Println(*user.CompanyID)
 	claims := jwt.MapClaims{
-		"sub":        user.ID,
-		"role":       user.Role,
-		"company_id": user.CompanyID,
-		"exp":        time.Now().Add(time.Hour * 24).Unix(), // 24 hours
-		"for_verified":   for_verified,
+		"sub":          user.ID,
+		"role":         user.Role,
+		"company_id":   user.CompanyID,
+		"exp":          time.Now().Add(time.Hour * 24).Unix(), // 24 hours
+		"for_verified": for_verified,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
