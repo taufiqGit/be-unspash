@@ -11,6 +11,8 @@ type UserRepository interface {
 	Create(ctx context.Context, tx *sql.Tx, user models.User) (models.User, error)
 	FindByEmail(email string) (models.User, error)
 	FindByUsername(username string) (models.User, error)
+	FindByID(user_id string) (models.User, error)
+	ChangeActivateUser(user_id string) (models.User, error)
 }
 
 type userRepository struct {
@@ -63,7 +65,7 @@ func (r *userRepository) Create(ctx context.Context, tx *sql.Tx, user models.Use
 
 func (r *userRepository) FindByEmail(email string) (models.User, error) {
 	query := `
-		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at
+		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, active
 		FROM users
 		WHERE email = $1
 	`
@@ -78,6 +80,7 @@ func (r *userRepository) FindByEmail(email string) (models.User, error) {
 		&user.CompanyID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.Active,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -90,12 +93,40 @@ func (r *userRepository) FindByEmail(email string) (models.User, error) {
 
 func (r *userRepository) FindByUsername(username string) (models.User, error) {
 	query := `
-		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at
+		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, active
 		FROM users
 		WHERE username = $1
 	`
 	var user models.User
 	err := r.db.QueryRow(query, username).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash,
+		&user.Role,
+		&user.PosPIN,
+		&user.CompanyID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Active,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.User{}, nil
+		}
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func (r *userRepository) FindByID(user_id string) (models.User, error) {
+	query := `
+		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at
+		FROM users
+		WHERE id = $1
+	`
+	var user models.User
+	err := r.db.QueryRow(query, user_id).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
@@ -113,4 +144,13 @@ func (r *userRepository) FindByUsername(username string) (models.User, error) {
 		return models.User{}, err
 	}
 	return user, nil
+}
+
+func (r *userRepository) ChangeActivateUser(user_id string) (models.User, error) {
+	query := `UPDATE users SET active = true WHERE id = $1`
+	_, err := r.db.Exec(query, user_id)
+	if err != nil {
+		return models.User{}, err
+	}
+	return r.FindByID(user_id)
 }

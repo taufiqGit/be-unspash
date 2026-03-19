@@ -18,20 +18,23 @@ import (
 type AuthService interface {
 	Register(input models.UserRegisterInput) (models.User, error)
 	Login(input models.LoginInput) (models.AuthResponse, error)
+	VerifyEmail(token string) error
 }
 
 type authService struct {
 	userRepo    repositories.UserRepository
 	outletRepo  repositories.OutletRepository
 	companyRepo repositories.CompanyRepository
+	emailRepo   repositories.EmailRepository
 	db          *sql.DB
 }
 
-func NewAuthService(userRepo repositories.UserRepository, companyRepo repositories.CompanyRepository, outletRepo repositories.OutletRepository, db *sql.DB) AuthService {
+func NewAuthService(userRepo repositories.UserRepository, companyRepo repositories.CompanyRepository, outletRepo repositories.OutletRepository, emailRepo repositories.EmailRepository, db *sql.DB) AuthService {
 	return &authService{
 		userRepo:    userRepo,
 		companyRepo: companyRepo,
 		outletRepo:  outletRepo,
+		emailRepo:   emailRepo,
 		db:          db,
 	}
 }
@@ -137,6 +140,17 @@ func (s *authService) Register(input models.UserRegisterInput) (models.User, err
 		return models.User{}, err
 	}
 
+	// 8. Generate JWT for verify email
+	token, err := generateJWT(createdUser, true)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	// 9. Send verification email
+	if err := s.emailRepo.SendVerificationEmail(ctx, createdUser.Email, createdUser.Username, os.Getenv("FE_VERIFY_MAIL"), token); err != nil {
+		return models.User{}, err
+	}
+
 	return createdUser, nil
 }
 
@@ -155,8 +169,12 @@ func (s *authService) Login(input models.LoginInput) (models.AuthResponse, error
 		return models.AuthResponse{}, errors.New("invalid email or password")
 	}
 
-	// 3. Generate JWT
-	token, err := generateJWT(user)
+	if !user.Active {
+		return models.AuthResponse{}, errors.New("account not active")
+	}
+
+	// 4. Generate JWT
+	token, err := generateJWT(user, false)
 	if err != nil {
 		return models.AuthResponse{}, err
 	}
@@ -167,7 +185,34 @@ func (s *authService) Login(input models.LoginInput) (models.AuthResponse, error
 	}, nil
 }
 
-func generateJWT(user models.User) (string, error) {
+func (s *authService) VerifyEmail(token string) error {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		return err
+	}
+
+	user_id, ok := claims["sub"].(string)
+	if !ok {
+		return errors.New("invalid token")
+	}
+
+	_, err = s.userRepo.FindByID(user_id)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.userRepo.ChangeActivateUser(user_id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func generateJWT(user models.User, for_verified	bool) (string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-change-me" // Fallback for dev
@@ -178,6 +223,7 @@ func generateJWT(user models.User) (string, error) {
 		"role":       user.Role,
 		"company_id": user.CompanyID,
 		"exp":        time.Now().Add(time.Hour * 24).Unix(), // 24 hours
+		"for_verified":   for_verified,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

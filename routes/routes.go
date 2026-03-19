@@ -19,6 +19,7 @@ func RegisterSystemRoutes(mux *http.ServeMux, h *handlers.SystemHandler) {
 func RegisterAuthRoutes(mux *http.ServeMux, h *handlers.AuthHandler) {
 	mux.HandleFunc("/api/register", h.Register)
 	mux.HandleFunc("/api/login", h.Login)
+	mux.HandleFunc("/api/verify-email", h.VerifyEmail)
 }
 
 func RegisterCategoryRoutes(mux *http.ServeMux, h *handlers.CategoryHandler) {
@@ -52,4 +53,14 @@ func RegisterProductRoutes(mux *http.ServeMux, h *handlers.ProductHandler) {
 func RegisterCustomerRoutes(mux *http.ServeMux, h *handlers.CustomerHandler) {
 	mux.Handle("/api/customers", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
 	mux.Handle("/api/customers/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}
+
+func RegisterDiscountRoutes(mux *http.ServeMux, h *handlers.DiscountHandler) {
+	mux.Handle("/api/discounts", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/discounts/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}
+
+func RegisterTaxRoutes(mux *http.ServeMux, h *handlers.TaxHandler) {
+	mux.Handle("/api/taxes", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/taxes/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
 }

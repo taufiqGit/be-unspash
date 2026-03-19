@@ -21,6 +21,7 @@ type User struct {
 	Phone        *string   `json:"phone,omitempty"`
 	CompanyID    *string   `json:"company_id,omitempty"`
 	Role         UserRole  `json:"role"`
+	Active       bool      `json:"active"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

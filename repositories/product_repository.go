@@ -10,7 +10,8 @@ type ProductRepository interface {
 	FindAll(companyID string, params models.PaginationParams) ([]models.ProductList, int, error)
 	Create(companyID string, payload models.ProductInput) (models.Product, error)
 	FindByID(productID string) (models.Product, error)
-	DeleteById(productID string) error
+	Update(productID string, payload models.ProductInput) (models.Product, error)
+	DeleteById(productID string) (string, error)
 }
 
 type productRepository struct {
@@ -48,7 +49,7 @@ func (r *productRepository) FindAll(companyID string, params models.PaginationPa
 	if col, ok := allowedSorts[params.SortBy]; ok {
 		sortedBy = col
 	}
-	query := "SELECT p.name, p.sku, p.unit, p.cost, p.price, p.image_url, c.name AS category " + baseQuery
+	query := "SELECT p.id, p.name, p.sku, p.unit, p.cost, p.price, p.image_url, c.name AS category " + baseQuery
 	query += fmt.Sprintf(" ORDER BY %s %s", sortedBy, params.SortOrder)
 
 	offset := (params.Page - 1) * params.Limit
@@ -64,7 +65,7 @@ func (r *productRepository) FindAll(companyID string, params models.PaginationPa
 	var products = []models.ProductList{}
 	for rows.Next() {
 		var product models.ProductList
-		if err := rows.Scan(&product.Name, &product.SKU, &product.Unit, &product.Cost, &product.Price, &product.ImageURL, &product.Category); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &product.Cost, &product.Price, &product.ImageURL, &product.Category); err != nil {
 			return nil, 0, err
 		}
 		products = append(products, product)
@@ -99,11 +100,41 @@ func (r *productRepository) FindByID(productID string) (models.Product, error) {
 	return product, nil
 }
 
-func (r *productRepository) DeleteById(productID string) error {
-	query := "DELETE FROM products WHERE id = $1"
-	_, err := r.db.Exec(query, productID)
+func (r *productRepository) Update(productID string, payload models.ProductInput) (models.Product, error) {
+	var product models.Product
+	query := `
+		UPDATE products
+		SET name = $1, sku = $2, unit = $3, cost = $4, price = $5, image_url = $6, category_id = $7, updated_at = NOW()
+		WHERE id = $8
+		RETURNING id, name, sku, unit, cost, price, image_url, company_id, category_id, created_at, updated_at
+	`
+	err := r.db.QueryRow(query,
+		payload.Name,
+		payload.SKU,
+		payload.Unit,
+		payload.Cost,
+		payload.Price,
+		payload.ImageURL,
+		payload.CategoryID,
+		productID,
+	).Scan(
+		&product.ID, &product.Name, &product.SKU, &product.Unit,
+		&product.Cost, &product.Price, &product.ImageURL,
+		&product.CompanyID, &product.CategoryID,
+		&product.CreatedAt, &product.UpdatedAt,
+	)
 	if err != nil {
-		return err
+		return models.Product{}, err
 	}
-	return nil
+	return product, nil
+}
+
+func (r *productRepository) DeleteById(productID string) (string, error) {
+	var imageURL string
+	query := "DELETE FROM products WHERE id = $1 RETURNING COALESCE(image_url, '')"
+	err := r.db.QueryRow(query, productID).Scan(&imageURL)
+	if err != nil {
+		return "", err
+	}
+	return imageURL, nil
 }

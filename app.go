@@ -69,6 +69,12 @@ func main() {
 	//db.CreateTables()
 	defer db.Close()
 
+	// Setup S3 Client (BiznetGio NEO Object Storage)
+	s3Client, err := db.InitS3()
+	if err != nil {
+		log.Fatalf("s3 error: %v", err)
+	}
+
 	// Setup Repositories
 	todoRepo := repositories.NewTodoRepository(dbConn)
 	categoryRepo := repositories.NewCategoryRepository(dbConn)
@@ -79,19 +85,23 @@ func main() {
 	orderTypeRepo := repositories.NewOrderTypeRepository(dbConn)
 	outletRepo := repositories.NewOutletRepository(dbConn)
 	productRepo := repositories.NewProductRepository(dbConn)
-	storageRepo := repositories.NewStorageRepository(dbConn)
+	storageRepo := repositories.NewStorageRepository(s3Client)
 	customerRepo := repositories.NewCustomerRepository(dbConn)
-
+	discountRepo := repositories.NewDiscountRepository(dbConn)
+	taxRepo := repositories.NewTaxRepository(dbConn)
+	emailRepo := repositories.NewEmailRepository()
 	// Setup Services
 	todoService := services.NewTodoService(todoRepo)
 	categoryService := services.NewCategoryService(categoryRepo)
 	addOnService := services.NewAddOnService(addOnRepo)
 	systemService := services.NewSystemService(systemRepo)
-	authService := services.NewAuthService(userRepo, companyRepo, outletRepo, dbConn)
+	authService := services.NewAuthService(userRepo, companyRepo, outletRepo, emailRepo, dbConn)
 	orderTypeService := services.NewOrderTypeService(orderTypeRepo)
 	outletService := services.NewOutletService(outletRepo)
 	productService := services.NewProductService(productRepo, storageRepo)
 	customerService := services.NewCustomerService(customerRepo)
+	discountService := services.NewDiscountService(discountRepo)
+	taxService := services.NewTaxService(taxRepo)
 
 	// Setup Handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
@@ -103,6 +113,8 @@ func main() {
 	outletHandler := handlers.NewOutletHandler(outletService)
 	productHandler := handlers.NewProductHandler(productService)
 	customerHandler := handlers.NewCustomerHandler(customerService)
+	discountHandler := handlers.NewDiscountHandler(discountService)
+	taxHandler := handlers.NewTaxHandler(taxService)
 
 	mux := http.NewServeMux()
 	routes.RegisterTodoRoutes(mux, todoHandler)
@@ -114,6 +126,8 @@ func main() {
 	routes.RegisterOutletRoutes(mux, outletHandler)
 	routes.RegisterProductRoutes(mux, productHandler)
 	routes.RegisterCustomerRoutes(mux, customerHandler)
+	routes.RegisterDiscountRoutes(mux, discountHandler)
+	routes.RegisterTaxRoutes(mux, taxHandler)
 
 	server := &http.Server{
 		Addr:         ":8080",

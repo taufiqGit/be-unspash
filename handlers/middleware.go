@@ -53,6 +53,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		for_verified, _ := claims["for_verified"].(bool)
+		if for_verified {
+			writeError(w, http.StatusForbidden, "FORBIDDEN", "token for verify email only")
+			return
+		}
+
 		// Inject user info into context
 		// Note: ID is stored as "sub"
 		userID, _ := claims["sub"].(string)

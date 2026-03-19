@@ -19,6 +19,7 @@ type Product struct {
 }
 
 type ProductList struct {
+	ID       string  `json:"id"`
 	Name     string  `json:"name"`
 	SKU      string  `json:"sku"`
 	Unit     string  `json:"unit"`

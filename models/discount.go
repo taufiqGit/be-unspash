@@ -20,6 +20,30 @@ const (
 	DiscountTargetSpecific DiscountTarget = "specific" // Spesifik
 )
 
+type DiscountTargetCategory struct {
+	ID        		string    `json:"id"`
+	CategoryId      string    `json:"category_id"`
+	ParentID  		string    `json:"parent_id"`
+}
+
+type DiscountTargetProduct struct {
+	ID        string    `json:"id"`
+	ProductId string    `json:"product_id"`
+	ParentID  string    `json:"parent_id"`
+}
+
+type DiscountTargetOutlet struct {
+	ID        string    `json:"id"`
+	OutletID  string    `json:"outlet_id"`
+	ParentID  string    `json:"parent_id"`
+}
+
+type DiscountTargetOrderType struct {
+	ID        		string    `json:"id"`
+	OrderTypeID     string    `json:"order_type_id"`
+	ParentID  		string    `json:"parent_id"`
+}
+
 // DiscountSpecificTarget merepresentasikan sub-target ketika target = "specific"
 type DiscountSpecificTarget string
 
@@ -32,9 +56,9 @@ const (
 type Discount struct {
 	ID        string       `json:"id"`
 	CompanyID string       `json:"company_id"`
-	OutletID  string       `json:"outlet_id"`
 	Name      string       `json:"name"`
 	Type      DiscountType `json:"type"`
+	OutletIDs  []DiscountTargetOutlet       `json:"outlet_ids"`
 
 	// Nilai diskon: nominal Rp atau persentase (%)
 	DiscountValue float64 `json:"discount_value"`
@@ -54,14 +78,14 @@ type Discount struct {
 	SpecificTargetType *DiscountSpecificTarget `json:"specific_target_type,omitempty"`
 
 	// ID kategori yang menjadi target — aktif ketika SpecificTargetType = "category"
-	TargetCategoryIDs []string `json:"target_category_ids,omitempty"`
+	TargetCategoryIDs []DiscountTargetCategory `json:"target_category_ids,omitempty"`
 
 	// ID produk yang menjadi target — aktif ketika SpecificTargetType = "product"
-	TargetProductIDs []string `json:"target_product_ids,omitempty"`
+	TargetProductIDs []DiscountTargetProduct `json:"target_product_ids,omitempty"`
 
 	// Target Diskon Lainnya (opsional) — berlaku untuk semua tipe
 	ApplyToOrderTypes bool     `json:"apply_to_order_types"`
-	OrderTypeIDs      []string `json:"order_type_ids,omitempty"`
+	OrderTypeIDs      []DiscountTargetOrderType `json:"order_type_ids,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -69,11 +93,11 @@ type Discount struct {
 
 // DiscountInput digunakan untuk menerima payload dari request (Create & Update)
 type DiscountInput struct {
-	Name          string       `json:"name"`
-	Type          DiscountType `json:"type"`
-	OutletID      string       `json:"outlet_id"`
-	DiscountValue float64      `json:"discount_value"`
-
+	Name          	string       `json:"name"`
+	Type          	DiscountType `json:"type"`
+	CompanyID      	string      `json:"company_id"`
+	DiscountValue 	float64      `json:"discount_value"`
+	OutletIDs     	[]string     `json:"outlet_ids,omitempty"`
 	// Opsional tergantung tipe
 	MaxAmount   *float64 `json:"max_amount,omitempty"`
 	MinPurchase *float64 `json:"min_purchase,omitempty"`

@@ -63,3 +63,27 @@ func (c *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	writeSuccess(w, http.StatusOK, response, "login successful", nil)
 }
+
+func (c *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", "POST")
+		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+
+	var input struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid JSON format")
+		return
+	}
+
+	err := c.authService.VerifyEmail(input.Token)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "VERIFICATION_FAILED", err.Error())
+		return
+	}
+
+	writeSuccess(w, http.StatusOK, nil, "email verified", nil)
+}

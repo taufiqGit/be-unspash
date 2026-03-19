@@ -97,13 +97,11 @@ func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		productID := r.PathValue("product_id")
-		product, err := h.service.FindByID(productID)
+		product, err := h.service.FindByID(id)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err.Error(), "Failed to get product")
+			writeError(w, http.StatusNotFound, "not_found", "Product not found")
 			return
 		}
-
 		writeSuccess(w, http.StatusOK, product, "Product detail", nil)
 	case http.MethodDelete:
 		err := h.service.DeleteById(id)
@@ -128,6 +126,7 @@ func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "bad_request", "missing required fields")
 			return
 		}
+
 		payload := models.ProductInput{
 			Name:       name,
 			Price:      utils.ParseFloat64(price),
@@ -136,10 +135,23 @@ func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 			Cost:       utils.ParseFloat64(cost),
 			CategoryID: categoryID,
 			CompanyID:  *user.CompanyID,
-			ImageURL:   "",
 		}
-		_ = payload // Update not yet implemented
-		writeSuccess(w, http.StatusOK, nil, "Product updated", nil)
+
+		// Gambar bersifat opsional saat update — jika tidak dikirim, tetap pakai gambar lama
+		imageFile, imageHeader, err := r.FormFile("image")
+		if err == nil {
+			defer imageFile.Close()
+		} else {
+			imageFile = nil
+			imageHeader = nil
+		}
+
+		updated, err := h.service.Update(id, payload, imageFile, imageHeader)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "Failed to update product")
+			return
+		}
+		writeSuccess(w, http.StatusOK, updated, "Product updated", nil)
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Method not allowed")
 		return
