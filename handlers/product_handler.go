@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"gowes/models"
 	"gowes/services"
 	"gowes/utils"
@@ -46,7 +47,17 @@ func (h *ProductHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 		unit := r.FormValue("unit")
 		cost := r.FormValue("cost")
 		categoryID := r.FormValue("category_id")
-
+		addOnIDs := r.FormValue("add_on_ids")
+		var addOnIDList []string
+		if addOnIDs != "" {
+			addOnIDList = strings.Split(addOnIDs, ",")
+			fmt.Println(addOnIDList)
+			for _, addOnID := range addOnIDList {
+				fmt.Println(addOnID)
+			}
+		} else {
+			addOnIDList = []string{}
+		}
 		file, header, err := r.FormFile("image")
 		if err != nil {
 			writeError(w, http.StatusBadRequest, "bad_request", "invalid image file")
@@ -70,7 +81,7 @@ func (h *ProductHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 			ImageURL:   "",
 		}
 
-		product, err := h.service.Create(*user.CompanyID, payload, file, header)
+		product, err := h.service.Create(*user.CompanyID, payload, file, header, addOnIDList)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, err.Error(), "Failed to create product")
 			return

@@ -12,6 +12,7 @@ type ProductRepository interface {
 	FindByID(productID string) (models.Product, error)
 	Update(productID string, payload models.ProductInput) (models.Product, error)
 	DeleteById(productID string) (string, error)
+	UpdateAddOnsByProductID(addOnIDs []string, productID string, companyID string) ([]models.AddOnProduct, error)
 }
 
 type productRepository struct {
@@ -137,4 +138,21 @@ func (r *productRepository) DeleteById(productID string) (string, error) {
 		return "", err
 	}
 	return imageURL, nil
+}
+
+func (r *productRepository) UpdateAddOnsByProductID(addOnIDs []string, productID string, companyID string) ([]models.AddOnProduct, error) {
+	var addOns []models.AddOnProduct
+	queryDelete := "DELETE FROM add_on_products WHERE product_id = $1 AND company_id = $2"
+	_, err := r.db.Exec(queryDelete, productID, companyID)
+	if err != nil {
+		return nil, err
+	}
+	queryInsert := "INSERT INTO add_on_products (add_on_id, product_id, company_id) VALUES ($1, $2, $3)"
+	for _, addOnID := range addOnIDs {
+		_, err := r.db.Exec(queryInsert, addOnID, productID, companyID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return addOns, nil
 }

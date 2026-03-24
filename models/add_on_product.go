@@ -8,6 +8,7 @@ type AddOnProduct struct {
 	ID        string    `json:"id"`
 	CompanyID string    `json:"company_id"`
 	AddOnID   string    `json:"add_on_id"`
+	ProductID string    `json:"product_id"`
 	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

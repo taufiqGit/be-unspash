@@ -10,7 +10,7 @@ import (
 
 type ProductService interface {
 	FindAll(companyID string, params models.PaginationParams) ([]models.ProductList, int, error)
-	Create(companyID string, payload models.ProductInput, imageFile multipart.File, imageHeader *multipart.FileHeader) (models.Product, error)
+	Create(companyID string, payload models.ProductInput, imageFile multipart.File, imageHeader *multipart.FileHeader, addOnIDList []string) (models.Product, error)
 	FindByID(productID string) (models.Product, error)
 	DeleteById(productID string) error
 	Update(productID string, payload models.ProductInput, imageFile multipart.File, imageHeader *multipart.FileHeader) (models.Product, error)
@@ -33,7 +33,7 @@ func (s *productService) FindAll(companyID string, params models.PaginationParam
 	return products, total, nil
 }
 
-func (s *productService) Create(companyID string, payload models.ProductInput, imageFile multipart.File, imageHeader *multipart.FileHeader) (models.Product, error) {
+func (s *productService) Create(companyID string, payload models.ProductInput, imageFile multipart.File, imageHeader *multipart.FileHeader, addOnIDList []string) (models.Product, error) {
 	imageURL, err := s.storageRepository.SaveImage(context.Background(), imageFile, imageHeader)
 	if err != nil {
 		return models.Product{}, err
