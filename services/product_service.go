@@ -46,6 +46,12 @@ func (s *productService) Create(companyID string, payload models.ProductInput, i
 		return models.Product{}, err
 	}
 
+	// Update add-ons for the product
+	_, err = s.productRepository.UpdateAddOnsByProductID(addOnIDList, product.ID, companyID)
+	if err != nil {
+		return models.Product{}, err
+	}
+
 	return product, nil
 }
 
