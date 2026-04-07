@@ -64,3 +64,23 @@ func RegisterTaxRoutes(mux *http.ServeMux, h *handlers.TaxHandler) {
 	mux.Handle("/api/taxes", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
 	mux.Handle("/api/taxes/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
 }
+
+func RegisterRoleRoutes(mux *http.ServeMux, h *handlers.RoleHandler) {
+	mux.Handle("/api/roles", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/roles/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}
+
+func RegisterUnitRoutes(mux *http.ServeMux, h *handlers.UnitHandler) {
+	mux.Handle("/api/units", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/units/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}
+
+func RegisterSupplierRoutes(mux *http.ServeMux, h *handlers.SupplierHandler) {
+	mux.Handle("/api/suppliers", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/suppliers/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}
+
+func RegisterRecipeRoutes(mux *http.ServeMux, h *handlers.RecipeHandler) {
+	mux.Handle("/api/recipes", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/recipes/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}

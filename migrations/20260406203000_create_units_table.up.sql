@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS units (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    symbol VARCHAR(50) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    company_id UUID NOT NULL REFERENCES company(id) ON DELETE CASCADE,
+    created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    updated_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_units_name ON units(name);
+CREATE INDEX IF NOT EXISTS idx_units_type ON units(type);
+CREATE INDEX IF NOT EXISTS idx_units_company_id ON units(company_id);

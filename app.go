@@ -89,6 +89,10 @@ func main() {
 	customerRepo := repositories.NewCustomerRepository(dbConn)
 	discountRepo := repositories.NewDiscountRepository(dbConn)
 	taxRepo := repositories.NewTaxRepository(dbConn)
+	roleRepo := repositories.NewRoleRepository(dbConn)
+	unitRepo := repositories.NewUnitRepository(dbConn)
+	supplierRepo := repositories.NewSupplierRepository(dbConn)
+	recipeRepo := repositories.NewRecipeRepository(dbConn)
 	emailRepo := repositories.NewEmailRepository()
 	// Setup Services
 	todoService := services.NewTodoService(todoRepo)
@@ -102,6 +106,10 @@ func main() {
 	customerService := services.NewCustomerService(customerRepo)
 	discountService := services.NewDiscountService(discountRepo)
 	taxService := services.NewTaxService(taxRepo)
+	roleService := services.NewRoleService(roleRepo)
+	unitService := services.NewUnitService(unitRepo)
+	supplierService := services.NewSupplierService(supplierRepo)
+	recipeService := services.NewRecipeService(recipeRepo)
 
 	// Setup Handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
@@ -115,6 +123,10 @@ func main() {
 	customerHandler := handlers.NewCustomerHandler(customerService)
 	discountHandler := handlers.NewDiscountHandler(discountService)
 	taxHandler := handlers.NewTaxHandler(taxService)
+	roleHandler := handlers.NewRoleHandler(roleService)
+	unitHandler := handlers.NewUnitHandler(unitService)
+	supplierHandler := handlers.NewSupplierHandler(supplierService)
+	recipeHandler := handlers.NewRecipeHandler(recipeService)
 
 	mux := http.NewServeMux()
 	routes.RegisterTodoRoutes(mux, todoHandler)
@@ -128,6 +140,10 @@ func main() {
 	routes.RegisterCustomerRoutes(mux, customerHandler)
 	routes.RegisterDiscountRoutes(mux, discountHandler)
 	routes.RegisterTaxRoutes(mux, taxHandler)
+	routes.RegisterRoleRoutes(mux, roleHandler)
+	routes.RegisterUnitRoutes(mux, unitHandler)
+	routes.RegisterSupplierRoutes(mux, supplierHandler)
+	routes.RegisterRecipeRoutes(mux, recipeHandler)
 
 	server := &http.Server{
 		Addr:         ":8080",
