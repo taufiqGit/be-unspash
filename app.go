@@ -93,6 +93,8 @@ func main() {
 	unitRepo := repositories.NewUnitRepository(dbConn)
 	supplierRepo := repositories.NewSupplierRepository(dbConn)
 	recipeRepo := repositories.NewRecipeRepository(dbConn)
+	cashierShiftRepo := repositories.NewCashierShiftRepository(dbConn)
+	purchaseRepo := repositories.NewPurchaseRepository(dbConn)
 	emailRepo := repositories.NewEmailRepository()
 	// Setup Services
 	todoService := services.NewTodoService(todoRepo)
@@ -110,6 +112,8 @@ func main() {
 	unitService := services.NewUnitService(unitRepo)
 	supplierService := services.NewSupplierService(supplierRepo)
 	recipeService := services.NewRecipeService(recipeRepo)
+	cashierShiftService := services.NewCashierShiftService(cashierShiftRepo)
+	purchaseService := services.NewPurchaseService(purchaseRepo)
 
 	// Setup Handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
@@ -127,6 +131,8 @@ func main() {
 	unitHandler := handlers.NewUnitHandler(unitService)
 	supplierHandler := handlers.NewSupplierHandler(supplierService)
 	recipeHandler := handlers.NewRecipeHandler(recipeService)
+	cashierShiftHandler := handlers.NewCashierShiftHandler(cashierShiftService)
+	purchaseHandler := handlers.NewPurchaseHandler(purchaseService)
 
 	mux := http.NewServeMux()
 	routes.RegisterTodoRoutes(mux, todoHandler)
@@ -144,6 +150,8 @@ func main() {
 	routes.RegisterUnitRoutes(mux, unitHandler)
 	routes.RegisterSupplierRoutes(mux, supplierHandler)
 	routes.RegisterRecipeRoutes(mux, recipeHandler)
+	routes.RegisterCashierShiftRoutes(mux, cashierShiftHandler)
+	routes.RegisterPurchaseRoutes(mux, purchaseHandler)
 
 	server := &http.Server{
 		Addr:         ":8080",

@@ -84,3 +84,13 @@ func RegisterRecipeRoutes(mux *http.ServeMux, h *handlers.RecipeHandler) {
 	mux.Handle("/api/recipes", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
 	mux.Handle("/api/recipes/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
 }
+
+func RegisterCashierShiftRoutes(mux *http.ServeMux, h *handlers.CashierShiftHandler) {
+	mux.Handle("/api/cashier-shifts/start", handlers.AuthMiddleware(http.HandlerFunc(h.StartShift)))
+	mux.Handle("/api/cashier-shifts/end", handlers.AuthMiddleware(http.HandlerFunc(h.EndShift)))
+}
+
+func RegisterPurchaseRoutes(mux *http.ServeMux, h *handlers.PurchaseHandler) {
+	mux.Handle("/api/purchases", handlers.AuthMiddleware(http.HandlerFunc(h.ListOrCreate)))
+	mux.Handle("/api/purchases/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.HandleByID)))
+}
