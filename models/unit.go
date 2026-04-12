@@ -17,6 +17,6 @@ type Unit struct {
 type UnitInput struct {
 	Name      string `json:"name"`
 	Symbol    string `json:"symbol"`
-	Type      string `json:"type"`
+	Type      string `json:"type"` // weight / volume / qty
 	CompanyID string `json:"company_id"`
 }

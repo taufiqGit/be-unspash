@@ -21,7 +21,12 @@ func NewPurchaseRepository(db *sql.DB) PurchaseRepository {
 }
 
 func (r *purchaseRepository) FindAll(companyID string, params models.PaginationParams) ([]models.Purchase, int, error) {
-	baseQuery := " FROM purchases WHERE company_id = $1"
+	baseQuery := `
+		FROM purchases p
+		JOIN users u ON p.user_id = u.id
+		JOIN outlets o ON p.outlet_id = o.id
+		WHERE p.company_id = $1
+	`
 	args := []interface{}{companyID}
 	argIdx := 2
 
@@ -30,15 +35,15 @@ func (r *purchaseRepository) FindAll(companyID string, params models.PaginationP
 		return nil, 0, err
 	}
 
-	allowedSorts := map[string]bool{
-		"created_at":  true,
-		"updated_at":  true,
-		"grand_total": true,
-		"status":      true,
+	allowedSorts := map[string]string{
+		"created_at":  "p.created_at",
+		"updated_at":  "p.updated_at",
+		"grand_total": "p.grand_total",
+		"status":      "p.status",
 	}
-	sortBy := "created_at"
-	if allowedSorts[params.SortBy] {
-		sortBy = params.SortBy
+	sortBy := "p.created_at"
+	if col, ok := allowedSorts[params.SortBy]; ok {
+		sortBy = col
 	}
 
 	sortOrder := "DESC"
@@ -46,7 +51,7 @@ func (r *purchaseRepository) FindAll(companyID string, params models.PaginationP
 		sortOrder = "ASC"
 	}
 
-	query := `SELECT id, company_id, user_id, outlet_id, payment_method, grand_total, tax_value, paid_amount, change_amount, status, discount_bill, created_at, updated_at` + baseQuery
+	query := `SELECT p.id, p.company_id, p.user_id, u.username, p.outlet_id, o.name, p.payment_method, p.grand_total, p.tax_value, p.paid_amount, p.change_amount, p.status, p.discount_bill, p.created_at, p.updated_at` + baseQuery
 	query += fmt.Sprintf(" ORDER BY %s %s", sortBy, sortOrder)
 
 	offset := (params.Page - 1) * params.Limit
@@ -66,7 +71,9 @@ func (r *purchaseRepository) FindAll(companyID string, params models.PaginationP
 			&purchase.ID,
 			&purchase.CompanyID,
 			&purchase.UserID,
+			&purchase.UserName,
 			&purchase.OutletID,
+			&purchase.OutletName,
 			&purchase.PaymentMethod,
 			&purchase.GrandTotal,
 			&purchase.TaxValue,
@@ -90,9 +97,11 @@ func (r *purchaseRepository) FindAll(companyID string, params models.PaginationP
 
 func (r *purchaseRepository) FindByID(id string, companyID string) (models.Purchase, error) {
 	row := r.db.QueryRow(`
-		SELECT id, company_id, user_id, outlet_id, payment_method, grand_total, tax_value, paid_amount, change_amount, status, discount_bill, created_at, updated_at
-		FROM purchases
-		WHERE id = $1 AND company_id = $2
+		SELECT p.id, p.company_id, p.user_id, u.username, p.outlet_id, o.name, p.payment_method, p.grand_total, p.tax_value, p.paid_amount, p.change_amount, p.status, p.discount_bill, p.created_at, p.updated_at
+		FROM purchases p
+		JOIN users u ON p.user_id = u.id
+		JOIN outlets o ON p.outlet_id = o.id
+		WHERE p.id = $1 AND p.company_id = $2
 	`, id, companyID)
 
 	var purchase models.Purchase
@@ -100,7 +109,9 @@ func (r *purchaseRepository) FindByID(id string, companyID string) (models.Purch
 		&purchase.ID,
 		&purchase.CompanyID,
 		&purchase.UserID,
+		&purchase.UserName,
 		&purchase.OutletID,
+		&purchase.OutletName,
 		&purchase.PaymentMethod,
 		&purchase.GrandTotal,
 		&purchase.TaxValue,

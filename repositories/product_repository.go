@@ -50,7 +50,7 @@ func (r *productRepository) FindAll(companyID string, params models.PaginationPa
 	if col, ok := allowedSorts[params.SortBy]; ok {
 		sortedBy = col
 	}
-	query := "SELECT p.id, p.name, p.sku, p.unit, p.cost, p.price, p.image_url, c.name AS category " + baseQuery
+	query := "SELECT p.id, p.name, p.sku, p.unit, p.unit_id, p.cost, p.price, p.image_url, c.name AS category " + baseQuery
 	query += fmt.Sprintf(" ORDER BY %s %s", sortedBy, params.SortOrder)
 
 	offset := (params.Page - 1) * params.Limit
@@ -66,7 +66,7 @@ func (r *productRepository) FindAll(companyID string, params models.PaginationPa
 	var products = []models.ProductList{}
 	for rows.Next() {
 		var product models.ProductList
-		if err := rows.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &product.Cost, &product.Price, &product.ImageURL, &product.Category); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &product.UnitID, &product.Cost, &product.Price, &product.ImageURL, &product.Category); err != nil {
 			return nil, 0, err
 		}
 		products = append(products, product)
@@ -81,11 +81,11 @@ func (r *productRepository) FindAll(companyID string, params models.PaginationPa
 
 func (r *productRepository) Create(companyID string, payload models.ProductInput) (models.Product, error) {
 	var createProduct models.Product
-	queryInsert := "INSERT INTO products (name, sku, unit, cost, price, image_url, company_id, category_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, sku, unit, cost, price, image_url, company_id, category_id, created_at, updated_at"
-	args := []interface{}{payload.Name, payload.SKU, payload.Unit, payload.Cost, payload.Price, payload.ImageURL, companyID, payload.CategoryID}
+	queryInsert := "INSERT INTO products (name, sku, unit, unit_id, cost, price, image_url, company_id, category_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, sku, unit, unit_id, cost, price, image_url, company_id, category_id, created_at, updated_at"
+	args := []interface{}{payload.Name, payload.SKU, payload.Unit, payload.UnitID, payload.Cost, payload.Price, payload.ImageURL, companyID, payload.CategoryID}
 	var row *sql.Row
 	row = r.db.QueryRow(queryInsert, args...)
-	if err := row.Scan(&createProduct.ID, &createProduct.Name, &createProduct.SKU, &createProduct.Unit, &createProduct.Cost, &createProduct.Price, &createProduct.ImageURL, &createProduct.CompanyID, &createProduct.CategoryID, &createProduct.CreatedAt, &createProduct.UpdatedAt); err != nil {
+	if err := row.Scan(&createProduct.ID, &createProduct.Name, &createProduct.SKU, &createProduct.Unit, &createProduct.UnitID, &createProduct.Cost, &createProduct.Price, &createProduct.ImageURL, &createProduct.CompanyID, &createProduct.CategoryID, &createProduct.CreatedAt, &createProduct.UpdatedAt); err != nil {
 		return models.Product{}, err
 	}
 	return createProduct, nil
@@ -93,9 +93,9 @@ func (r *productRepository) Create(companyID string, payload models.ProductInput
 
 func (r *productRepository) FindByID(productID string) (models.Product, error) {
 	var product models.Product
-	query := "SELECT id, name, sku, unit, cost, price, image_url, company_id, category_id, created_at, updated_at FROM products WHERE id = $1"
+	query := "SELECT id, name, sku, unit, unit_id, cost, price, image_url, company_id, category_id, created_at, updated_at FROM products WHERE id = $1"
 	row := r.db.QueryRow(query, productID)
-	if err := row.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &product.Cost, &product.Price, &product.ImageURL, &product.CompanyID, &product.CategoryID, &product.CreatedAt, &product.UpdatedAt); err != nil {
+	if err := row.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &product.UnitID, &product.Cost, &product.Price, &product.ImageURL, &product.CompanyID, &product.CategoryID, &product.CreatedAt, &product.UpdatedAt); err != nil {
 		return models.Product{}, err
 	}
 	return product, nil
@@ -105,21 +105,22 @@ func (r *productRepository) Update(productID string, payload models.ProductInput
 	var product models.Product
 	query := `
 		UPDATE products
-		SET name = $1, sku = $2, unit = $3, cost = $4, price = $5, image_url = $6, category_id = $7, updated_at = NOW()
-		WHERE id = $8
-		RETURNING id, name, sku, unit, cost, price, image_url, company_id, category_id, created_at, updated_at
+		SET name = $1, sku = $2, unit = $3, unit_id = $4, cost = $5, price = $6, image_url = $7, category_id = $8, updated_at = NOW()
+		WHERE id = $9
+		RETURNING id, name, sku, unit, unit_id, cost, price, image_url, company_id, category_id, created_at, updated_at
 	`
 	err := r.db.QueryRow(query,
 		payload.Name,
 		payload.SKU,
 		payload.Unit,
+		payload.UnitID,
 		payload.Cost,
 		payload.Price,
 		payload.ImageURL,
 		payload.CategoryID,
 		productID,
 	).Scan(
-		&product.ID, &product.Name, &product.SKU, &product.Unit,
+		&product.ID, &product.Name, &product.SKU, &product.Unit, &product.UnitID,
 		&product.Cost, &product.Price, &product.ImageURL,
 		&product.CompanyID, &product.CategoryID,
 		&product.CreatedAt, &product.UpdatedAt,

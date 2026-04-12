@@ -45,6 +45,7 @@ func (h *ProductHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 		price := r.FormValue("price")
 		sku := r.FormValue("sku")
 		unit := r.FormValue("unit")
+		unitID := r.FormValue("unit_id")
 		cost := r.FormValue("cost")
 		categoryID := r.FormValue("category_id")
 		addOnIDs := r.FormValue("add_on_ids")
@@ -65,7 +66,7 @@ func (h *ProductHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		if name == "" || price == "" || sku == "" || unit == "" || cost == "" || categoryID == "" {
+		if name == "" || price == "" || sku == "" || unit == "" || unitID == "" || cost == "" || categoryID == "" {
 			writeError(w, http.StatusBadRequest, "bad_request", "missing required fields")
 			return
 		}
@@ -75,6 +76,7 @@ func (h *ProductHandler) ListOrCreate(w http.ResponseWriter, r *http.Request) {
 			Price:      utils.ParseFloat64(price),
 			SKU:        sku,
 			Unit:       unit,
+			UnitID:     unitID,
 			Cost:       utils.ParseFloat64(cost),
 			CategoryID: categoryID,
 			CompanyID:  *user.CompanyID,
@@ -131,9 +133,10 @@ func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 		price := r.FormValue("price")
 		sku := r.FormValue("sku")
 		unit := r.FormValue("unit")
+		unitID := r.FormValue("unit_id")
 		cost := r.FormValue("cost")
 		categoryID := r.FormValue("category_id")
-		if name == "" || price == "" || sku == "" || unit == "" || cost == "" || categoryID == "" {
+		if name == "" || price == "" || sku == "" || unit == "" || unitID == "" || cost == "" || categoryID == "" {
 			writeError(w, http.StatusBadRequest, "bad_request", "missing required fields")
 			return
 		}
@@ -143,6 +146,7 @@ func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 			Price:      utils.ParseFloat64(price),
 			SKU:        sku,
 			Unit:       unit,
+			UnitID:     unitID,
 			Cost:       utils.ParseFloat64(cost),
 			CategoryID: categoryID,
 			CompanyID:  *user.CompanyID,

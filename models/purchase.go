@@ -6,7 +6,9 @@ type Purchase struct {
 	ID            string           `json:"id"`
 	CompanyID     string           `json:"company_id"`
 	UserID        string           `json:"user_id"`
+	UserName      string           `json:"user_name,omitempty"`
 	OutletID      string           `json:"outlet_id"`
+	OutletName    string           `json:"outlet_name,omitempty"`
 	PaymentMethod string           `json:"payment_method"`
 	GrandTotal    float64          `json:"grand_total"`
 	TaxValue      float64          `json:"tax_value"`

@@ -9,6 +9,16 @@ type Stock struct {
 	Qty       int    `json:"qty"`
 }
 
+type StockPerOutlet struct {
+	ID          string `json:"id"`
+	ProductID   string `json:"product_id"`
+	ProductName string `json:"product_name"`
+	ProductSKU  string `json:"product_sku"`
+	OutletID    string `json:"outlet_id"`
+	OutletName  string `json:"outlet_name"`
+	Qty         int    `json:"qty"`
+}
+
 type StockMovementType string
 
 const (

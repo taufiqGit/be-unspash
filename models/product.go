@@ -16,6 +16,7 @@ type Product struct {
 	Name       string      `json:"name"`
 	SKU        string      `json:"sku"`
 	Unit       string      `json:"unit"`
+	UnitID     string      `json:"unit_id"`
 	Cost       float64     `json:"cost"`
 	Price      float64     `json:"price"`
 	ImageURL   string      `json:"image_url"`
@@ -33,6 +34,7 @@ type ProductList struct {
 	Name     string  `json:"name"`
 	SKU      string  `json:"sku"`
 	Unit     string  `json:"unit"`
+	UnitID   string  `json:"unit_id"`
 	Cost     float64 `json:"cost"`
 	Price    float64 `json:"price"`
 	ImageURL string  `json:"image_url"`
@@ -42,6 +44,7 @@ type ProductInput struct {
 	Name       string  `json:"name"`
 	SKU        string  `json:"sku"`
 	Unit       string  `json:"unit"`
+	UnitID     string  `json:"unit_id"`
 	Cost       float64 `json:"cost"`
 	Price      float64 `json:"price"`
 	ImageURL   string  `json:"image_url"`

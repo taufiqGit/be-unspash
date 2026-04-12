@@ -95,6 +95,7 @@ func main() {
 	recipeRepo := repositories.NewRecipeRepository(dbConn)
 	cashierShiftRepo := repositories.NewCashierShiftRepository(dbConn)
 	purchaseRepo := repositories.NewPurchaseRepository(dbConn)
+	stockRepo := repositories.NewStockRepository(dbConn)
 	emailRepo := repositories.NewEmailRepository()
 	// Setup Services
 	todoService := services.NewTodoService(todoRepo)
@@ -114,6 +115,7 @@ func main() {
 	recipeService := services.NewRecipeService(recipeRepo)
 	cashierShiftService := services.NewCashierShiftService(cashierShiftRepo)
 	purchaseService := services.NewPurchaseService(purchaseRepo)
+	stockService := services.NewStockService(stockRepo)
 
 	// Setup Handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
@@ -133,6 +135,7 @@ func main() {
 	recipeHandler := handlers.NewRecipeHandler(recipeService)
 	cashierShiftHandler := handlers.NewCashierShiftHandler(cashierShiftService)
 	purchaseHandler := handlers.NewPurchaseHandler(purchaseService)
+	stockHandler := handlers.NewStockHandler(stockService)
 
 	mux := http.NewServeMux()
 	routes.RegisterTodoRoutes(mux, todoHandler)
@@ -152,6 +155,7 @@ func main() {
 	routes.RegisterRecipeRoutes(mux, recipeHandler)
 	routes.RegisterCashierShiftRoutes(mux, cashierShiftHandler)
 	routes.RegisterPurchaseRoutes(mux, purchaseHandler)
+	routes.RegisterStockRoutes(mux, stockHandler)
 
 	server := &http.Server{
 		Addr:         ":8080",
