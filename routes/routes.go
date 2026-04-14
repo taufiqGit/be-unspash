@@ -99,3 +99,8 @@ func RegisterStockRoutes(mux *http.ServeMux, h *handlers.StockHandler) {
 	mux.Handle("/api/stocks", handlers.AuthMiddleware(http.HandlerFunc(h.List)))
 	mux.Handle("/api/stocks/{outlet_id}/{product_id}", handlers.AuthMiddleware(http.HandlerFunc(h.GetByOutletAndProduct)))
 }
+
+func RegisterStockMovementRoutes(mux *http.ServeMux, h *handlers.StockMovementHandler) {
+	mux.Handle("/api/stock-movements", handlers.AuthMiddleware(http.HandlerFunc(h.List)))
+	mux.Handle("/api/stock-movements/{id}", handlers.AuthMiddleware(http.HandlerFunc(h.GetByID)))
+}

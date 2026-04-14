@@ -40,7 +40,10 @@ const (
 type StockMovement struct {
 	ID            string             `json:"id"`
 	ProductID     string             `json:"product_id"`
+	ProductName   string             `json:"product_name,omitempty"`
+	ProductSKU    string             `json:"product_sku,omitempty"`
 	OutletID      string             `json:"outlet_id"`
+	OutletName    string             `json:"outlet_name,omitempty"`
 	Type          StockMovementType  `json:"type"`
 	Qty           int                `json:"qty"`
 	ReferenceType StockReferenceType `json:"reference_type"`
