@@ -14,6 +14,7 @@ type ProductService interface {
 	FindByID(productID string) (models.Product, error)
 	DeleteById(productID string) error
 	Update(productID string, payload models.ProductInput, imageFile multipart.File, imageHeader *multipart.FileHeader) (models.Product, error)
+	FindAllMobile(companyID string) ([]models.ProductList, error)
 }
 
 type productService struct {
@@ -113,4 +114,12 @@ func (s *productService) Update(productID string, payload models.ProductInput, i
 	}
 
 	return updated, nil
+}
+
+func (s *productService) FindAllMobile(companyID string) ([]models.ProductList, error) {
+	products, err := s.productRepository.FindAllMobile(companyID)
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
 }

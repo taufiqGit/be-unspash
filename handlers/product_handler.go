@@ -172,3 +172,17 @@ func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *ProductHandler) HandleMobile(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(UserContextKey).(models.User)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "Unauthorized", "User not found in context")
+		return
+	}
+	products, err := h.service.FindAllMobile(*user.CompanyID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error(), "Failed to get products")
+		return
+	}
+	writeSuccess(w, http.StatusOK, products, "Product list", nil)
+}

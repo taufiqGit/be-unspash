@@ -13,6 +13,7 @@ type ProductRepository interface {
 	Update(productID string, payload models.ProductInput) (models.Product, error)
 	DeleteById(productID string) (string, error)
 	UpdateAddOnsByProductID(addOnIDs []string, productID string, companyID string) ([]models.AddOnProduct, error)
+	FindAllMobile(companyID string) ([]models.ProductList, error)
 }
 
 type productRepository struct {
@@ -66,8 +67,26 @@ func (r *productRepository) FindAll(companyID string, params models.PaginationPa
 	var products = []models.ProductList{}
 	for rows.Next() {
 		var product models.ProductList
+		var unitID sql.NullString
+		var imageURL sql.NullString
+		var category sql.NullString
 		if err := rows.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &product.UnitID, &product.Cost, &product.Price, &product.ImageURL, &product.Category); err != nil {
 			return nil, 0, err
+		}
+		if unitID.Valid {
+			product.UnitID = unitID.String
+		} else {
+			product.UnitID = ""
+		}
+		if imageURL.Valid {
+			product.ImageURL = imageURL.String
+		} else {
+			product.ImageURL = ""
+		}
+		if category.Valid {
+			product.Category = category.String
+		} else {
+			product.Category = ""
 		}
 		products = append(products, product)
 	}
@@ -156,4 +175,50 @@ func (r *productRepository) UpdateAddOnsByProductID(addOnIDs []string, productID
 		}
 	}
 	return addOns, nil
+}
+
+func (r *productRepository) FindAllMobile(companyID string) ([]models.ProductList, error) {
+	query := `
+		SELECT id, name, sku, unit, unit_id, cost, price, image_url, category_id
+		FROM products
+		WHERE company_id = $1
+	`
+	rows, err := r.db.Query(query, companyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var products = []models.ProductList{}
+	for rows.Next() {
+		var product models.ProductList
+		var unitID sql.NullString
+		var imageURL sql.NullString
+		var category sql.NullString
+		if err := rows.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &unitID, &product.Cost, &product.Price, &imageURL, &category); err != nil {
+			return nil, err
+		}
+		if unitID.Valid {
+			product.UnitID = unitID.String
+		} else {
+			product.UnitID = ""
+		}
+		if imageURL.Valid {
+			product.ImageURL = imageURL.String
+		} else {
+			product.ImageURL = ""
+		}
+		if category.Valid {
+			product.Category = category.String
+		} else {
+			product.Category = ""
+		}
+		products = append(products, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
