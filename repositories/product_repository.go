@@ -70,7 +70,7 @@ func (r *productRepository) FindAll(companyID string, params models.PaginationPa
 		var unitID sql.NullString
 		var imageURL sql.NullString
 		var category sql.NullString
-		if err := rows.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &product.UnitID, &product.Cost, &product.Price, &product.ImageURL, &product.Category); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.SKU, &product.Unit, &unitID, &product.Cost, &product.Price, &imageURL, &category); err != nil {
 			return nil, 0, err
 		}
 		if unitID.Valid {
