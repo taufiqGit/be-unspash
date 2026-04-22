@@ -27,12 +27,12 @@ func NewDiscountRepository(db *sql.DB) DiscountRepository {
 func scanDiscountFromRow(row *sql.Row) (models.Discount, error) {
 	var d models.Discount
 	var maxAmount, minPurchase sql.NullFloat64
-	var targetType, specificTargetType sql.NullString
+	var targetType sql.NullString
 
 	err := row.Scan(
 		&d.ID, &d.CompanyID, &d.Name, &d.Type, &d.DiscountValue,
 		&maxAmount, &minPurchase,
-		&targetType, &specificTargetType,
+		&targetType, &d.Priority,
 		&d.ApplyToOrderTypes,
 		&d.CreatedAt, &d.UpdatedAt,
 	)
@@ -49,10 +49,6 @@ func scanDiscountFromRow(row *sql.Row) (models.Discount, error) {
 	if targetType.Valid {
 		t := models.DiscountTarget(targetType.String)
 		d.TargetType = &t
-	}
-	if specificTargetType.Valid {
-		s := models.DiscountSpecificTarget(specificTargetType.String)
-		d.SpecificTargetType = &s
 	}
 	return d, nil
 }
@@ -60,12 +56,12 @@ func scanDiscountFromRow(row *sql.Row) (models.Discount, error) {
 func scanDiscountFromRows(rows *sql.Rows) (models.Discount, error) {
 	var d models.Discount
 	var maxAmount, minPurchase sql.NullFloat64
-	var targetType, specificTargetType sql.NullString
+	var targetType sql.NullString
 
 	err := rows.Scan(
 		&d.ID, &d.CompanyID, &d.Name, &d.Type, &d.DiscountValue,
 		&maxAmount, &minPurchase,
-		&targetType, &specificTargetType,
+		&targetType, &d.Priority,
 		&d.ApplyToOrderTypes,
 		&d.CreatedAt, &d.UpdatedAt,
 	)
@@ -82,10 +78,6 @@ func scanDiscountFromRows(rows *sql.Rows) (models.Discount, error) {
 	if targetType.Valid {
 		t := models.DiscountTarget(targetType.String)
 		d.TargetType = &t
-	}
-	if specificTargetType.Valid {
-		s := models.DiscountSpecificTarget(specificTargetType.String)
-		d.SpecificTargetType = &s
 	}
 	return d, nil
 }
@@ -259,7 +251,7 @@ func (r *discountRepository) FindAll(companyID string, params models.PaginationP
 
 	// Count total
 	var total int
-	if err := r.db.QueryRow("SELECT COUNT(*)" + baseQuery, args...).Scan(&total); err != nil {
+	if err := r.db.QueryRow("SELECT COUNT(*)"+baseQuery, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
@@ -275,7 +267,7 @@ func (r *discountRepository) FindAll(companyID string, params models.PaginationP
 	}
 
 	selectClause := `SELECT id, company_id, name, type, discount_value, max_amount, min_purchase,
-		target_type, specific_target_type, apply_to_order_types, created_at, updated_at`
+		target_type, priority, apply_to_order_types, created_at, updated_at`
 
 	query := selectClause + baseQuery
 	query += fmt.Sprintf(" ORDER BY %s %s", sortBy, sortOrder)
@@ -313,7 +305,7 @@ func (r *discountRepository) FindAll(companyID string, params models.PaginationP
 func (r *discountRepository) FindByID(id string) (models.Discount, error) {
 	row := r.db.QueryRow(`
 		SELECT id, company_id, name, type, discount_value, max_amount, min_purchase,
-		       target_type, specific_target_type, apply_to_order_types, created_at, updated_at
+		       target_type, priority, apply_to_order_types, created_at, updated_at
 		FROM discounts
 		WHERE id = $1
 	`, id)
@@ -342,7 +334,7 @@ func (r *discountRepository) Create(discount models.Discount, outletIDs, categor
 	err = tx.QueryRow(`
 		INSERT INTO discounts
 			(company_id, name, type, discount_value, max_amount, min_purchase,
-			 target_type, specific_target_type, apply_to_order_types, created_at, updated_at)
+			 target_type, priority, apply_to_order_types, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id
 	`,
@@ -353,12 +345,13 @@ func (r *discountRepository) Create(discount models.Discount, outletIDs, categor
 		discount.MaxAmount,
 		discount.MinPurchase,
 		discount.TargetType,
-		discount.SpecificTargetType,
+		discount.Priority,
 		discount.ApplyToOrderTypes,
 		discount.CreatedAt,
 		discount.UpdatedAt,
 	).Scan(&discount.ID)
 	if err != nil {
+		fmt.Println(err, "err insert discount")
 		return models.Discount{}, fmt.Errorf("insert discount: %w", err)
 	}
 
@@ -369,10 +362,12 @@ func (r *discountRepository) Create(discount models.Discount, outletIDs, categor
 	discount.OrderTypeIDs = []models.DiscountTargetOrderType{}
 
 	if err := insertJunctions(tx, discount.ID, &discount, outletIDs, categoryIDs, productIDs, orderTypeIDs); err != nil {
+		fmt.Println(err, "err insert junctions")
 		return models.Discount{}, err
 	}
 
 	if err := tx.Commit(); err != nil {
+		fmt.Println(err, "err commit transaction")
 		return models.Discount{}, err
 	}
 
@@ -391,7 +386,7 @@ func (r *discountRepository) Update(discount models.Discount, outletIDs, categor
 	_, err = tx.Exec(`
 		UPDATE discounts
 		SET name = $1, type = $2, discount_value = $3, max_amount = $4, min_purchase = $5,
-		    target_type = $6, specific_target_type = $7, apply_to_order_types = $8, updated_at = $9
+		    target_type = $6, priority = $7, apply_to_order_types = $8, updated_at = $9
 		WHERE id = $10
 	`,
 		discount.Name,
@@ -400,7 +395,7 @@ func (r *discountRepository) Update(discount models.Discount, outletIDs, categor
 		discount.MaxAmount,
 		discount.MinPurchase,
 		discount.TargetType,
-		discount.SpecificTargetType,
+		discount.Priority,
 		discount.ApplyToOrderTypes,
 		discount.UpdatedAt,
 		discount.ID,

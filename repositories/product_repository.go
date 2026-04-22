@@ -219,6 +219,7 @@ func (r *productRepository) FindAllMobile(companyID string) ([]models.ProductLis
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	
 
 	return products, nil
 }

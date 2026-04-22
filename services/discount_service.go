@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"gowes/models"
 	"gowes/repositories"
 	"strings"
@@ -11,12 +12,11 @@ import (
 // ─── Sentinel errors ──────────────────────────────────────────────────────────
 
 var (
-	ErrDiscountNameRequired               = errors.New("discount name is required")
-	ErrDiscountValueInvalid               = errors.New("discount_value must be greater than 0")
-	ErrDiscountTypeInvalid                = errors.New("invalid discount type, must be one of: product_rp, product_pct, receipt_rp, receipt_pct")
-	ErrDiscountPctExceeded                = errors.New("discount_value cannot exceed 100 for percentage type")
-	ErrDiscountTargetNotApplicable        = errors.New("target_type is only applicable for product discount types")
-	ErrDiscountSpecificTargetNotApplicable = errors.New("specific_target_type requires target_type to be 'specific'")
+	ErrDiscountNameRequired        = errors.New("discount name is required")
+	ErrDiscountValueInvalid        = errors.New("discount_value must be greater than 0")
+	ErrDiscountTypeInvalid         = errors.New("invalid discount type, must be one of: product_rp, product_pct, receipt_rp, receipt_pct")
+	ErrDiscountPctExceeded         = errors.New("discount_value cannot exceed 100 for percentage type")
+	ErrDiscountTargetNotApplicable = errors.New("target_type is only applicable for product discount types")
 )
 
 // ─── Interface ────────────────────────────────────────────────────────────────
@@ -49,22 +49,23 @@ func (s *discountService) GetDiscount(id string) (models.Discount, error) {
 
 func (s *discountService) CreateDiscount(companyID string, in models.DiscountInput) (models.Discount, error) {
 	if err := validateDiscountInput(in); err != nil {
+		fmt.Println(err, "err validate discount input")
 		return models.Discount{}, err
 	}
 
 	now := time.Now().UTC()
 	d := models.Discount{
-		CompanyID:          companyID,
-		Name:               strings.TrimSpace(in.Name),
-		Type:               in.Type,
-		DiscountValue:      in.DiscountValue,
-		MaxAmount:          in.MaxAmount,
-		MinPurchase:        in.MinPurchase,
-		TargetType:         in.TargetType,
-		SpecificTargetType: in.SpecificTargetType,
-		ApplyToOrderTypes:  in.ApplyToOrderTypes,
-		CreatedAt:          now,
-		UpdatedAt:          now,
+		CompanyID:         companyID,
+		Name:              strings.TrimSpace(in.Name),
+		Type:              in.Type,
+		DiscountValue:     in.DiscountValue,
+		MaxAmount:         in.MaxAmount,
+		MinPurchase:       in.MinPurchase,
+		TargetType:        in.TargetType,
+		Priority:          in.Priority,
+		ApplyToOrderTypes: in.ApplyToOrderTypes,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 
 	outletIDs, categoryIDs, productIDs, orderTypeIDs := resolveRelationIDs(in)
@@ -82,15 +83,15 @@ func (s *discountService) UpdateDiscount(id string, in models.DiscountInput) (mo
 		return models.Discount{}, err
 	}
 
-	existing.Name               = strings.TrimSpace(in.Name)
-	existing.Type               = in.Type
-	existing.DiscountValue      = in.DiscountValue
-	existing.MaxAmount          = in.MaxAmount
-	existing.MinPurchase        = in.MinPurchase
-	existing.TargetType         = in.TargetType
-	existing.SpecificTargetType = in.SpecificTargetType
-	existing.ApplyToOrderTypes  = in.ApplyToOrderTypes
-	existing.UpdatedAt          = time.Now().UTC()
+	existing.Name = strings.TrimSpace(in.Name)
+	existing.Type = in.Type
+	existing.DiscountValue = in.DiscountValue
+	existing.MaxAmount = in.MaxAmount
+	existing.MinPurchase = in.MinPurchase
+	existing.TargetType = in.TargetType
+	existing.Priority = in.Priority
+	existing.ApplyToOrderTypes = in.ApplyToOrderTypes
+	existing.UpdatedAt = time.Now().UTC()
 
 	outletIDs, categoryIDs, productIDs, orderTypeIDs := resolveRelationIDs(in)
 
@@ -127,18 +128,12 @@ func validateDiscountInput(in models.DiscountInput) error {
 	}
 
 	// target_type hanya relevan untuk Diskon Barang
-	if in.TargetType != nil {
-		if in.Type != models.DiscountTypeProductRp && in.Type != models.DiscountTypeProductPct {
-			return ErrDiscountTargetNotApplicable
-		}
-	}
-
-	// specific_target_type hanya relevan saat target_type = "specific"
-	if in.SpecificTargetType != nil {
-		if in.TargetType == nil || *in.TargetType != models.DiscountTargetSpecific {
-			return ErrDiscountSpecificTargetNotApplicable
-		}
-	}
+	// if in.TargetType != nil {
+	// 	fmt.Println(in.Type != models.DiscountTypeProductRp && in.Type != models.DiscountTypeProductPct, "target type")
+	// 	if in.Type != models.DiscountTypeProductRp && in.Type != models.DiscountTypeProductPct {
+	// 		return ErrDiscountTargetNotApplicable
+	// 	}
+	// }
 
 	return nil
 }
@@ -149,16 +144,11 @@ func resolveRelationIDs(in models.DiscountInput) (outletIDs, categoryIDs, produc
 	// Outlet — berlaku untuk semua tipe
 	outletIDs = deduplicateIDs(in.OutletIDs)
 
-	// Category / Product — hanya untuk Diskon Barang dengan target = "specific"
+	// Category / Product — hanya relevan untuk Diskon Barang dengan target = "category" atau "product"
 	isProductType := in.Type == models.DiscountTypeProductRp || in.Type == models.DiscountTypeProductPct
-	if isProductType && in.TargetType != nil && *in.TargetType == models.DiscountTargetSpecific &&
-		in.SpecificTargetType != nil {
-		switch *in.SpecificTargetType {
-		case models.DiscountSpecificTargetCategory:
-			categoryIDs = deduplicateIDs(in.TargetCategoryIDs)
-		case models.DiscountSpecificTargetProduct:
-			productIDs = deduplicateIDs(in.TargetProductIDs)
-		}
+	if isProductType && in.TargetType != nil && (*in.TargetType == models.DiscountTargetTypeCategory || *in.TargetType == models.DiscountTargetTypeProduct) {
+		categoryIDs = deduplicateIDs(in.TargetCategoryIDs)
+		productIDs = deduplicateIDs(in.TargetProductIDs)
 	}
 
 	// Order types — hanya aktif jika toggle apply_to_order_types = true

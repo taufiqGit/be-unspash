@@ -1,0 +1,5 @@
+ALTER TABLE discounts
+ADD COLUMN IF NOT EXISTS priority INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE discounts
+DROP COLUMN IF EXISTS specific_target_type;
