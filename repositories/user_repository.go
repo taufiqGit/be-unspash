@@ -26,8 +26,8 @@ func NewUserRepository(db *sql.DB) UserRepository {
 func (r *userRepository) Create(ctx context.Context, tx *sql.Tx, user models.User) (models.User, error) {
 	// Note: We use DEFAULT uuid_generate_v4() for ID in SQL, so we scan it back
 	query := `
-		INSERT INTO users (username, email, password_hash, role, pos_pin, company_id, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO users (username, email, password_hash, role, pos_pin, company_id, is_owner, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id
 	`
 	var row *sql.Row
@@ -39,6 +39,7 @@ func (r *userRepository) Create(ctx context.Context, tx *sql.Tx, user models.Use
 			user.Role,
 			user.PosPIN,
 			user.CompanyID,
+			user.IsOwner,
 			user.CreatedAt,
 			user.UpdatedAt,
 		)
@@ -50,6 +51,7 @@ func (r *userRepository) Create(ctx context.Context, tx *sql.Tx, user models.Use
 			user.Role,
 			user.PosPIN,
 			user.CompanyID,
+			user.IsOwner,
 			user.CreatedAt,
 			user.UpdatedAt,
 		)
@@ -65,7 +67,7 @@ func (r *userRepository) Create(ctx context.Context, tx *sql.Tx, user models.Use
 
 func (r *userRepository) FindByEmail(email string) (models.User, error) {
 	query := `
-		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, active
+		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, active, is_owner
 		FROM users
 		WHERE email = $1 OR username = $1
 	`
@@ -81,6 +83,7 @@ func (r *userRepository) FindByEmail(email string) (models.User, error) {
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.Active,
+		&user.IsOwner,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -93,7 +96,7 @@ func (r *userRepository) FindByEmail(email string) (models.User, error) {
 
 func (r *userRepository) FindByUsername(username string) (models.User, error) {
 	query := `
-		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, active
+		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, active, is_owner
 		FROM users
 		WHERE username = $1
 	`
@@ -121,7 +124,7 @@ func (r *userRepository) FindByUsername(username string) (models.User, error) {
 
 func (r *userRepository) FindByID(user_id string) (models.User, error) {
 	query := `
-		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at
+		SELECT id, username, email, password_hash, role, pos_pin, company_id, created_at, updated_at, is_owner
 		FROM users
 		WHERE id = $1
 	`
@@ -136,6 +139,7 @@ func (r *userRepository) FindByID(user_id string) (models.User, error) {
 		&user.CompanyID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.IsOwner,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

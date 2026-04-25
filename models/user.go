@@ -22,6 +22,7 @@ type User struct {
 	CompanyID    *string   `json:"company_id,omitempty"`
 	Role         UserRole  `json:"role"`
 	Active       bool      `json:"active"`
+	IsOwner      bool      `json:"is_owner"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

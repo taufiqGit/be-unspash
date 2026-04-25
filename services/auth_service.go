@@ -105,6 +105,7 @@ func (s *authService) Register(input models.UserRegisterInput) (models.User, err
 		Phone:        &input.Phone,
 		PasswordHash: string(hashedPassword),
 		Role:         models.RoleAdmin,
+		IsOwner:      true,
 		CompanyID:    &createdCompany.ID,
 		CreatedAt:    time.Now().UTC(),
 		UpdatedAt:    time.Now().UTC(),
