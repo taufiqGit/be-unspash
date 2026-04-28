@@ -181,8 +181,8 @@ func (s *authService) Login(input models.LoginInput) (models.AuthResponse, error
 	}
 
 	return models.AuthResponse{
-		Token: token,
-		User:  user,
+		AccessToken: token,
+		User:        user,
 	}, nil
 }
 
