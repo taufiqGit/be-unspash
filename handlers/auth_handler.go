@@ -87,3 +87,13 @@ func (c *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 
 	writeSuccess(w, http.StatusOK, nil, "email verified", nil)
 }
+
+func (c *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", "POST")
+		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+
+	writeSuccess(w, http.StatusOK, nil, "logout successful", nil)
+}

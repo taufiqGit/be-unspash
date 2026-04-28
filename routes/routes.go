@@ -17,9 +17,10 @@ func RegisterSystemRoutes(mux *http.ServeMux, h *handlers.SystemHandler) {
 }
 
 func RegisterAuthRoutes(mux *http.ServeMux, h *handlers.AuthHandler) {
-	mux.HandleFunc("/api/register", h.Register)
-	mux.HandleFunc("/api/login", h.Login)
-	mux.HandleFunc("/api/verify-email", h.VerifyEmail)
+	mux.HandleFunc("/api/auth/register", h.Register)
+	mux.HandleFunc("/api/auth/login", h.Login)
+	mux.HandleFunc("/api/auth/verify-email", h.VerifyEmail)
+	mux.HandleFunc("/api/auth/logout", h.Logout)
 }
 
 func RegisterCategoryRoutes(mux *http.ServeMux, h *handlers.CategoryHandler) {
