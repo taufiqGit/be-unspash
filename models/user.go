@@ -51,5 +51,6 @@ type LoginInput struct {
 
 type AuthResponse struct {
 	AccessToken string `json:"access_token"`
+	ExpireTime  string `json:"expire_time"`
 	User        User   `json:"user"`
 }

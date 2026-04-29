@@ -142,13 +142,13 @@ func (s *authService) Register(input models.UserRegisterInput) (models.User, err
 	}
 
 	// 8. Generate JWT for verify email
-	token, err := generateJWT(createdUser, true)
+	tokenString, _, err := generateJWT(createdUser, true)
 	if err != nil {
 		return models.User{}, err
 	}
 
 	// 9. Send verification email
-	if err := s.emailRepo.SendVerificationEmail(ctx, createdUser.Email, createdUser.Username, os.Getenv("FE_VERIFY_MAIL"), token); err != nil {
+	if err := s.emailRepo.SendVerificationEmail(ctx, createdUser.Email, createdUser.Username, os.Getenv("FE_VERIFY_MAIL"), tokenString); err != nil {
 		return models.User{}, err
 	}
 
@@ -175,13 +175,14 @@ func (s *authService) Login(input models.LoginInput) (models.AuthResponse, error
 	}
 
 	// 4. Generate JWT
-	token, err := generateJWT(user, false)
+	tokenString, expireTime, err := generateJWT(user, false)
 	if err != nil {
 		return models.AuthResponse{}, err
 	}
 
 	return models.AuthResponse{
-		AccessToken: token,
+		AccessToken: tokenString,
+		ExpireTime:  expireTime,
 		User:        user,
 	}, nil
 }
@@ -213,20 +214,25 @@ func (s *authService) VerifyEmail(token string) error {
 	return nil
 }
 
-func generateJWT(user models.User, for_verified bool) (string, error) {
+func generateJWT(user models.User, for_verified bool) (string, string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-change-me" // Fallback for dev
 	}
+	expireTime := time.Now().Add(time.Hour * 24).Unix()
 	fmt.Println(*user.CompanyID)
 	claims := jwt.MapClaims{
 		"sub":          user.ID,
 		"role":         user.Role,
 		"company_id":   user.CompanyID,
-		"exp":          time.Now().Add(time.Hour * 24).Unix(), // 24 hours
+		"exp":          expireTime,
 		"for_verified": for_verified,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(jwtSecret))
+	tokenString, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", "", err
+	}
+	return tokenString, fmt.Sprintf("%d", expireTime), nil
 }
